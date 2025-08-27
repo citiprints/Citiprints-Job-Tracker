@@ -17,7 +17,6 @@ const UpdateTaskSchema = z.object({
 	assigneeId: z.string().nullable().optional(),
 	jobNumber: z.string().nullable().optional(),
 	customFields: z.any().nullable().optional(),
-	paymentStatus: z.enum(["No Advance Received","Advance Received","Full Payment Received"]).optional(),
 });
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -71,7 +70,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 				...("customerId" in data ? { customerId: data.customerId ?? null } : {}),
 				...("jobNumber" in data ? { jobNumber: data.jobNumber ?? null } : {}),
 				...("customFields" in data ? { customFields: data.customFields == null ? null : JSON.stringify(data.customFields) } : {}),
-				...("paymentStatus" in data ? { paymentStatus: data.paymentStatus } : {}),
 			},
 			include: {
 				assignments: {

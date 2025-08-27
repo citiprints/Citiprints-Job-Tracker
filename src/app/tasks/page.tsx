@@ -786,6 +786,16 @@ export default function TasksPage() {
 						))}
 					</div>
 					{error && <p className="text-sm text-red-600">{error}</p>}
+					<select
+						className="w-full border rounded px-3 py-2"
+						value={custom["paymentStatus"] ?? ""}
+						onChange={e => setCustom({ ...custom, paymentStatus: e.target.value })}
+					>
+						<option value="">Select payment status</option>
+						<option value="No Advance Received">No Advance Received</option>
+						<option value="Advance Received">Advance Received</option>
+						<option value="Full Payment Received">Full Payment Received</option>
+					</select>
 					<button disabled={submitting} className="rounded bg-gray-900 px-3 py-2 text-white">{submitting ? "Creating..." : "Create"}</button>
 				</form>
 			</section>
@@ -1026,6 +1036,19 @@ export default function TasksPage() {
 												))}
 											</select>
 										</div>
+										<div>
+											<label className="block text-sm font-medium mb-1">Payment Status</label>
+											<select
+												className="w-full border rounded px-3 py-2"
+												value={custom["paymentStatus"] ?? ""}
+												onChange={e => setCustom({ ...custom, paymentStatus: e.target.value })}
+											>
+												<option value="">Select payment status</option>
+												<option value="No Advance Received">No Advance Received</option>
+												<option value="Advance Received">Advance Received</option>
+												<option value="Full Payment Received">Full Payment Received</option>
+											</select>
+										</div>
 									</div>
 
 									<div className="grid grid-cols-2 gap-4">
@@ -1221,6 +1244,11 @@ export default function TasksPage() {
 												))}
 												{isAssignedToMe(t) && (
 													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>Assigned to me</span>
+												)}
+												{t.customFields?.paymentStatus && (
+													<span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-800">
+														{t.customFields.paymentStatus}
+													</span>
 												)}
 											</span>
 										</div>
@@ -1693,6 +1721,12 @@ export default function TasksPage() {
 															</div>
 														)}
 													</div>
+												</div>
+											)}
+											{task.customFields.paymentStatus && (
+												<div>
+													<label className="block text-sm font-medium text-gray-700">Payment Status</label>
+													<p className="text-sm text-gray-900">{task.customFields.paymentStatus}</p>
 												</div>
 											)}
 										</div>
