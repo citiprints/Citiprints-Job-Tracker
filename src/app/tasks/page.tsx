@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { TaskLoadingSkeleton } from "../components/LoadingSkeleton";
 
 type Task = {
 	id: string;
@@ -33,10 +32,41 @@ type Subtask = {
 
 type Field = { id: string; key: string; label: string; type: string; required: boolean; order: number };
 
+// Loading skeleton component
+function TasksSkeleton() {
+	return (
+		<div className="space-y-4">
+			{[1, 2, 3, 4, 5].map((i) => (
+				<div key={i} className="border border-black rounded p-3">
+					<div className="animate-pulse">
+						<div className="flex items-center justify-between mb-2">
+							<div className="flex items-center gap-2">
+								<div className="w-5 h-5 bg-gray-200 rounded-full"></div>
+								<div className="h-5 bg-gray-200 rounded w-48"></div>
+								<div className="h-4 bg-gray-200 rounded w-16"></div>
+								<div className="h-4 bg-gray-200 rounded w-20"></div>
+								<div className="h-4 bg-gray-200 rounded w-24"></div>
+							</div>
+							<div className="h-6 bg-gray-200 rounded w-20"></div>
+						</div>
+						<div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+						<div className="flex gap-2">
+							<div className="h-8 bg-gray-200 rounded w-16"></div>
+							<div className="h-8 bg-gray-200 rounded w-16"></div>
+							<div className="h-8 bg-gray-200 rounded w-16"></div>
+						</div>
+					</div>
+				</div>
+			))}
+		</div>
+	);
+}
+
 export default function TasksPage() {
 	const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [fields, setFields] = useState<Field[]>([]);
+	const [loading, setLoading] = useState(true);
 	const [title, setTitle] = useState("");
 	const [desc, setDesc] = useState("");
 	const [start, setStart] = useState<string>("");
@@ -49,7 +79,7 @@ export default function TasksPage() {
 	const [editStatus, setEditStatus] = useState<Task["status"]>("TODO");
 	const [editStart, setEditStart] = useState<string>("");
 	const [editDue, setEditDue] = useState<string>("");
-	const [loading, setLoading] = useState(true);
+	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [customers, setCustomers] = useState<{ id: string; name: string }[]>([]);
 	const [customerId, setCustomerId] = useState<string>("");
@@ -306,7 +336,7 @@ export default function TasksPage() {
 
 	async function onCreate(e: React.FormEvent) {
 		e.preventDefault();
-		setLoading(true);
+		setSubmitting(true);
 		setError(null);
 		
 		// Handle file uploads first
@@ -342,7 +372,7 @@ export default function TasksPage() {
 				assigneeId: assigneeId || undefined 
 			})
 		});
-		setLoading(false);
+		setSubmitting(false);
 		if (!res.ok) {
 			const json = await res.json().catch(() => ({}));
 			setError(json.error ?? "Failed to create task");
@@ -752,7 +782,7 @@ export default function TasksPage() {
 						))}
 					</div>
 					{error && <p className="text-sm text-red-600">{error}</p>}
-					<button disabled={loading} className="rounded bg-gray-900 px-3 py-2 text-white">{loading ? "Creating..." : "Create"}</button>
+					<button disabled={submitting} className="rounded bg-gray-900 px-3 py-2 text-white">{submitting ? "Creating..." : "Create"}</button>
 				</form>
 			</section>
 			<section>
@@ -766,86 +796,91 @@ export default function TasksPage() {
 					</div>
 				</div>
 				<ul className="space-y-2">
-					{tasks.map((t, index) => (
-						<li key={t.id} className="border border-black rounded p-3">
-							{editingId === t.id ? (
-								<form
-									onSubmit={async e => {
-										e.preventDefault();
-										
-										// Handle file uploads first
-										const uploadedFiles = [];
-										for (const file of files) {
-											const formData = new FormData();
-											formData.append('file', file);
-											const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-											if (uploadRes.ok) {
-												const uploadData = await uploadRes.json();
-												// Prefer URL from R2 upload; fallback to local path for legacy
-												uploadedFiles.push(uploadData.url || `/uploads/${uploadData.filename}`);
-											}
-										}
-
-										// Combine existing attachments with new ones
-										const allAttachments = [
-											...(t.customFields?.attachments || []),
-											...uploadedFiles
-										];
-
-										await fetch(`/api/tasks/${t.id}`, {
-											method: "PATCH",
-											headers: { "Content-Type": "application/json" },
-											body: JSON.stringify({
-												title: editTitle,
-												description: editDesc,
-												status: editStatus,
-												startAt: editStart ? new Date(editStart).toISOString() : null,
-												dueAt: editDue ? new Date(editDue).toISOString() : null,
-												customerId: customerId || null,
-												assigneeId: assigneeId || null,
-												customFields: {
-													...t.customFields,
-													...custom,
-													attachments: allAttachments
+					{loading ? (
+						<TasksSkeleton />
+					) : tasks.length === 0 ? (
+						<p className="text-center text-gray-500">No tasks yet. Create one!</p>
+					) : (
+						tasks.map((t, index) => (
+							<li key={t.id} className="border border-black rounded p-3">
+								{editingId === t.id ? (
+									<form
+										onSubmit={async e => {
+											e.preventDefault();
+											
+											// Handle file uploads first
+											const uploadedFiles = [];
+											for (const file of files) {
+												const formData = new FormData();
+												formData.append('file', file);
+												const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+												if (uploadRes.ok) {
+													const uploadData = await uploadRes.json();
+													// Prefer URL from R2 upload; fallback to local path for legacy
+													uploadedFiles.push(uploadData.url || `/uploads/${uploadData.filename}`);
 												}
-											})
-										});
-										setEditingId(null);
-										setFiles([]);
-										setCustom({});
-										setCustomerId("");
-										setAssigneeId("");
-										load();
-									}}
-									className="space-y-4"
-								>
-									<div className="grid grid-cols-2 gap-4">
-										<div>
-											<label className="block text-sm font-medium mb-1">Title</label>
-											<input className="w-full border rounded px-3 py-2" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
-										</div>
-										<div>
-											<label className="block text-sm font-medium mb-1">Status</label>
-											<select className="w-full border rounded px-3 py-2" value={editStatus} onChange={e => setEditStatus(e.target.value as Task["status"]) }>
-												<option value="TODO">TODO</option>
-												<option value="IN_PROGRESS">IN_PROGRESS</option>
-												<option value="BLOCKED">BLOCKED</option>
-												<option value="DONE">DONE</option>
-												<option value="CANCELLED">CANCELLED</option>
-											</select>
-										</div>
-									</div>
+											}
 
-									<div>
-										<label className="block text-sm font-medium mb-1">Description</label>
-										<textarea className="w-full border rounded px-3 py-2" value={editDesc} onChange={e => setEditDesc(e.target.value)} />
-									</div>
+											// Combine existing attachments with new ones
+											const allAttachments = [
+												...(t.customFields?.attachments || []),
+												...uploadedFiles
+											];
 
-									<div className="grid grid-cols-2 gap-4">
+											await fetch(`/api/tasks/${t.id}`, {
+												method: "PATCH",
+												headers: { "Content-Type": "application/json" },
+												body: JSON.stringify({
+													title: editTitle,
+													description: editDesc,
+													status: editStatus,
+													startAt: editStart ? new Date(editStart).toISOString() : null,
+													dueAt: editDue ? new Date(editDue).toISOString() : null,
+													customerId: customerId || null,
+													assigneeId: assigneeId || null,
+													customFields: {
+														...t.customFields,
+														...custom,
+														attachments: allAttachments
+													}
+												})
+											});
+											setEditingId(null);
+											setFiles([]);
+											setCustom({});
+											setCustomerId("");
+											setAssigneeId("");
+											load();
+										}}
+										className="space-y-4"
+									>
+										<div className="grid grid-cols-2 gap-4">
+											<div>
+												<label className="block text-sm font-medium mb-1">Title</label>
+												<input className="w-full border rounded px-3 py-2" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
+											</div>
+											<div>
+												<label className="block text-sm font-medium mb-1">Status</label>
+												<select className="w-full border rounded px-3 py-2" value={editStatus} onChange={e => setEditStatus(e.target.value as Task["status"]) }>
+													<option value="TODO">TODO</option>
+													<option value="IN_PROGRESS">IN_PROGRESS</option>
+													<option value="BLOCKED">BLOCKED</option>
+													<option value="DONE">DONE</option>
+													<option value="CANCELLED">CANCELLED</option>
+												</select>
+											</div>
+										</div>
+
 										<div>
-											<label className="block text-sm font-medium mb-1">Customer</label>
-											{showNewCustomerForm ? (
-												<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+											<label className="block text-sm font-medium mb-1">Description</label>
+											<textarea className="w-full border rounded px-3 py-2" value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+										</div>
+
+										<div className="grid grid-cols-2 gap-4">
+											<div>
+												<label className="block text-sm font-medium mb-1">Customer</label>
+												{showNewCustomerForm ? (
+													<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
 							<div className="flex items-center justify-between">
 														<h3 className="font-medium text-sm">Add New Customer</h3>
 														<button

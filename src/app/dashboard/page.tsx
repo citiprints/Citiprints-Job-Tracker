@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { LoadingSkeleton } from "../components/LoadingSkeleton";
 
 type Task = {
 	id: string;
@@ -30,6 +29,50 @@ type Subtask = {
 	updatedAt: string;
 };
 
+// Loading skeleton component
+function DashboardSkeleton() {
+	return (
+		<div className="space-y-6">
+			{/* KPIs Skeleton */}
+			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+				{[1, 2, 3, 4].map((i) => (
+					<div key={i} className="border border-gray-200 rounded-lg p-4">
+						<div className="animate-pulse">
+							<div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+							<div className="h-8 bg-gray-200 rounded w-1/3"></div>
+						</div>
+					</div>
+				))}
+			</div>
+
+			{/* Upcoming Deadlines Skeleton */}
+			<div className="border border-black rounded p-4">
+				<div className="animate-pulse">
+					<div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+					<div className="space-y-4">
+						{[1, 2, 3].map((i) => (
+							<div key={i} className="border border-gray-200 rounded p-3">
+								<div className="flex items-center justify-between">
+									<div className="flex items-center gap-2">
+										<div className="w-5 h-5 bg-gray-200 rounded-full"></div>
+										<div className="h-4 bg-gray-200 rounded w-48"></div>
+										<div className="h-4 bg-gray-200 rounded w-16"></div>
+										<div className="h-4 bg-gray-200 rounded w-20"></div>
+									</div>
+									<div className="flex flex-col items-end gap-1">
+										<div className="h-4 bg-gray-200 rounded w-20"></div>
+										<div className="h-4 bg-gray-200 rounded w-16"></div>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
 export default function DashboardPage() {
 	const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
 	const [tasks, setTasks] = useState<Task[]>([]);
@@ -57,7 +100,7 @@ export default function DashboardPage() {
 			try {
 				const res = await fetch("/api/tasks");
 				if (res.ok) {
-					const json = await res.json();
+				const json = await res.json();
 					const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
 						...t,
 						customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
@@ -140,15 +183,6 @@ export default function DashboardPage() {
 		tasksByDate.set(key, arr);
 	});
 
-	if (loading) {
-		return (
-			<div className="space-y-6">
-				<h1 className="text-2xl font-semibold">Dashboard</h1>
-				<LoadingSkeleton />
-			</div>
-		);
-	}
-
 	return (
 		<div className="space-y-6">
 			<h1 className="text-2xl font-semibold">Dashboard</h1>
@@ -197,124 +231,130 @@ export default function DashboardPage() {
 					</div>
 				</div>
 
-				{viewMode === "list" ? (
-					<div className="space-y-4">
-						{tasksWithDeadlines.map((task, index) => {
-							const dueDate = new Date(task.dueAt!);
-							const timeLeft = dueDate.getTime() - now.getTime();
-							const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
-							
-							// Get subtasks with due dates for this task
-							const taskSubtasks = task.subtasks?.filter(subtask => 
-								subtask.dueAt && subtask.status !== "DONE"
-							).sort((a, b) => new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime()) || [];
-							
-							return (
-								<div key={task.id} className="border border-black rounded p-3">
-									{/* Main Task */}
-									<div className="flex items-center justify-between">
-										<div className="flex items-center gap-2">
-											<span className="text-[10px] w-5 h-5 inline-flex items-center justify-center rounded-full bg-black text-white">{index + 1}</span>
-											<button type="button" className="font-medium hover:underline" onClick={() => setViewingId(task.id)}>{task.title}</button>
-											{task.customFields?.quantity && (
-												<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Qty: {task.customFields.quantity}</span>
-											)}
-											{task.customerRef?.name && (
-												<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.customerRef.name}</span>
-											)}
-											{task.customFields?.category && (
-												<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.customFields.category}</span>
-											)}
-											{isAssignedToMe(task) && (
-												<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Assigned to me</span>
-											)}
-										</div>
-										<div className="flex flex-col items-end gap-1">
-											<span className={`text-sm ${daysLeft < 0 ? 'text-red-600' : daysLeft <= 3 ? 'text-orange-600' : 'text-gray-600'}`}>
-												{daysLeft < 0 ? `${Math.abs(daysLeft)} days overdue` : daysLeft === 0 ? 'Due today' : `${daysLeft} days left`}
-											</span>
-											<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.status}</span>
-										</div>
-									</div>
-									
-									{/* Subtasks */}
-									{taskSubtasks.length > 0 && (
-										<div className="mt-2 pt-2 border-t border-gray-200 ml-6 space-y-1">
-											{taskSubtasks.map(subtask => {
-												const subtaskDueDate = new Date(subtask.dueAt!);
-												const subtaskTimeLeft = subtaskDueDate.getTime() - now.getTime();
-												const subtaskDaysLeft = Math.ceil(subtaskTimeLeft / (1000 * 60 * 60 * 24));
-												
-												return (
-													<div key={subtask.id} className="flex items-center justify-between text-sm">
-														<div className="flex items-center gap-2">
-															<span className="text-gray-600">• {subtask.title}</span>
-															{isSubtaskAssignedToMe(subtask) && (
-																<span className="text-[10px] px-1 py-0.5 rounded-full bg-blue-100 text-blue-800">Assigned to me</span>
-															)}
-														</div>
-														<div className="flex flex-col items-end gap-1">
-															<span className={`text-xs ${subtaskDaysLeft < 0 ? 'text-red-600' : subtaskDaysLeft <= 3 ? 'text-orange-600' : 'text-gray-500'}`}>
-																{subtaskDaysLeft < 0 ? `${Math.abs(subtaskDaysLeft)} days overdue` : subtaskDaysLeft === 0 ? 'Due today' : `${subtaskDaysLeft} days left`}
-									</span>
-															<span className="text-[10px] px-1 py-0.5 rounded-full bg-green-100 text-green-800">{subtask.status}</span>
-														</div>
-													</div>
-												);
-											})}
-										</div>
-									)}
-									
-								</div>
-							);
-						})}
-					</div>
+				{loading ? (
+					<DashboardSkeleton />
 				) : (
 					<div>
-						<div className="flex items-center justify-between mb-3">
-							<div className="text-sm font-medium">{monthCursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</div>
-							<div className="flex items-center gap-2">
-								<button type="button" className="px-2 py-1 rounded border" onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))}>{"<"}</button>
-								<button type="button" className="px-2 py-1 rounded border" onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))}>{">"}</button>
-							</div>
-						</div>
-						<div className="grid grid-cols-7 gap-2 text-center text-xs text-gray-600 mb-1">
-							<div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
-						</div>
-						<div className="grid grid-cols-7 gap-2">
-							{Array.from({ length: startWeekday }).map((_, i) => (
-								<div key={`blank-${i}`} />
-							))}
-							{Array.from({ length: daysInMonth }).map((_, dIdx) => {
-								const day = dIdx + 1;
-								const date = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), day);
-								const key = formatYmd(date);
-								const dayTasks = tasks
-									.filter(t => (onlyMine ? isTaskOrAnySubtaskAssignedToMe(t) : true))
-									.filter(t => {
-										if (!t.dueAt) return false;
-										const d = new Date(t.dueAt);
-										return (
-											d.getFullYear() === monthCursor.getFullYear() &&
-											d.getMonth() === monthCursor.getMonth() &&
-											d.getDate() === day
-										);
-									});
-								return (
-									<div key={key} className="border rounded p-2 text-left min-h-20">
-										<div className="text-xs font-medium mb-1">{day}</div>
-										<div className="space-y-1">
-											{dayTasks.slice(0,3).map(t => (
-												<button type="button" key={t.id} onClick={() => setViewingId(t.id)} className="w-full text-left text-[10px] px-1 py-0.5 rounded bg-blue-50 text-blue-800 truncate hover:underline">{t.title}</button>
-											))}
-											{dayTasks.length > 3 && (
-												<div className="text-[10px] text-gray-500">+{dayTasks.length - 3} more</div>
+						{viewMode === "list" ? (
+							<div className="space-y-4">
+								{tasksWithDeadlines.map((task, index) => {
+									const dueDate = new Date(task.dueAt!);
+									const timeLeft = dueDate.getTime() - now.getTime();
+									const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
+									
+									// Get subtasks with due dates for this task
+									const taskSubtasks = task.subtasks?.filter(subtask => 
+										subtask.dueAt && subtask.status !== "DONE"
+									).sort((a, b) => new Date(a.dueAt!).getTime() - new Date(b.dueAt!).getTime()) || [];
+									
+									return (
+										<div key={task.id} className="border border-black rounded p-3">
+											{/* Main Task */}
+											<div className="flex items-center justify-between">
+												<div className="flex items-center gap-2">
+													<span className="text-[10px] w-5 h-5 inline-flex items-center justify-center rounded-full bg-black text-white">{index + 1}</span>
+													<button type="button" className="font-medium hover:underline" onClick={() => setViewingId(task.id)}>{task.title}</button>
+													{task.customFields?.quantity && (
+														<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Qty: {task.customFields.quantity}</span>
+													)}
+													{task.customerRef?.name && (
+														<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.customerRef.name}</span>
+													)}
+													{task.customFields?.category && (
+														<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.customFields.category}</span>
+													)}
+													{isAssignedToMe(task) && (
+														<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Assigned to me</span>
+													)}
+												</div>
+												<div className="flex flex-col items-end gap-1">
+													<span className={`text-sm ${daysLeft < 0 ? 'text-red-600' : daysLeft <= 3 ? 'text-orange-600' : 'text-gray-600'}`}>
+														{daysLeft < 0 ? `${Math.abs(daysLeft)} days overdue` : daysLeft === 0 ? 'Due today' : `${daysLeft} days left`}
+													</span>
+													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.status}</span>
+												</div>
+											</div>
+											
+											{/* Subtasks */}
+											{taskSubtasks.length > 0 && (
+												<div className="mt-2 pt-2 border-t border-gray-200 ml-6 space-y-1">
+													{taskSubtasks.map(subtask => {
+														const subtaskDueDate = new Date(subtask.dueAt!);
+														const subtaskTimeLeft = subtaskDueDate.getTime() - now.getTime();
+														const subtaskDaysLeft = Math.ceil(subtaskTimeLeft / (1000 * 60 * 60 * 24));
+														
+														return (
+															<div key={subtask.id} className="flex items-center justify-between text-sm">
+																<div className="flex items-center gap-2">
+																	<span className="text-gray-600">• {subtask.title}</span>
+																	{isSubtaskAssignedToMe(subtask) && (
+																		<span className="text-[10px] px-1 py-0.5 rounded-full bg-blue-100 text-blue-800">Assigned to me</span>
+																	)}
+																</div>
+																<div className="flex flex-col items-end gap-1">
+																	<span className={`text-xs ${subtaskDaysLeft < 0 ? 'text-red-600' : subtaskDaysLeft <= 3 ? 'text-orange-600' : 'text-gray-500'}`}>
+																		{subtaskDaysLeft < 0 ? `${Math.abs(subtaskDaysLeft)} days overdue` : subtaskDaysLeft === 0 ? 'Due today' : `${subtaskDaysLeft} days left`}
+																	</span>
+																	<span className="text-[10px] px-1 py-0.5 rounded-full bg-green-100 text-green-800">{subtask.status}</span>
+																</div>
+															</div>
+														);
+													})}
+												</div>
 											)}
+											
 										</div>
+									);
+								})}
+							</div>
+						) : (
+							<div>
+								<div className="flex items-center justify-between mb-3">
+									<div className="text-sm font-medium">{monthCursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</div>
+									<div className="flex items-center gap-2">
+										<button type="button" className="px-2 py-1 rounded border" onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))}>{"<"}</button>
+										<button type="button" className="px-2 py-1 rounded border" onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))}>{">"}</button>
 									</div>
-								);
-							})}
-						</div>
+								</div>
+								<div className="grid grid-cols-7 gap-2 text-center text-xs text-gray-600 mb-1">
+									<div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+								</div>
+								<div className="grid grid-cols-7 gap-2">
+									{Array.from({ length: startWeekday }).map((_, i) => (
+										<div key={`blank-${i}`} />
+									))}
+									{Array.from({ length: daysInMonth }).map((_, dIdx) => {
+										const day = dIdx + 1;
+										const date = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), day);
+										const key = formatYmd(date);
+										const dayTasks = tasks
+											.filter(t => (onlyMine ? isTaskOrAnySubtaskAssignedToMe(t) : true))
+											.filter(t => {
+												if (!t.dueAt) return false;
+												const d = new Date(t.dueAt);
+												return (
+													d.getFullYear() === monthCursor.getFullYear() &&
+													d.getMonth() === monthCursor.getMonth() &&
+													d.getDate() === day
+												);
+											});
+										return (
+											<div key={key} className="border rounded p-2 text-left min-h-20">
+												<div className="text-xs font-medium mb-1">{day}</div>
+												<div className="space-y-1">
+													{dayTasks.slice(0,3).map(t => (
+														<button type="button" key={t.id} onClick={() => setViewingId(t.id)} className="w-full text-left text-[10px] px-1 py-0.5 rounded bg-blue-50 text-blue-800 truncate hover:underline">{t.title}</button>
+													))}
+													{dayTasks.length > 3 && (
+														<div className="text-[10px] text-gray-500">+{dayTasks.length - 3} more</div>
+													)}
+												</div>
+											</div>
+										);
+									})}
+								</div>
+							</div>
+						)}
 					</div>
 				)}
 			</div>
