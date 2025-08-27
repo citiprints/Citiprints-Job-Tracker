@@ -7,7 +7,6 @@ type Task = {
 	description: string;
 	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED";
 	priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-	paymentStatus: "NO_ADVANCE_RECEIVED" | "ADVANCE_RECEIVED" | "FULL_PAYMENT_RECEIVED";
 	startAt?: string | null;
 	dueAt: string | null;
 	createdAt: string;

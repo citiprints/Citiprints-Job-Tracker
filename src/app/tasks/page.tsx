@@ -8,7 +8,6 @@ type Task = {
 	description: string;
 	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED";
 	priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-	paymentStatus: "NO_ADVANCE_RECEIVED" | "ADVANCE_RECEIVED" | "FULL_PAYMENT_RECEIVED";
 	startAt?: string | null;
 	dueAt: string | null;
 	createdAt: string;
@@ -75,13 +74,11 @@ export default function TasksPage() {
 	const [start, setStart] = useState<string>("");
 	const [due, setDue] = useState<string>("");
 	const [custom, setCustom] = useState<Record<string, any>>({});
-	const [paymentStatus, setPaymentStatus] = useState<Task["paymentStatus"]>("NO_ADVANCE_RECEIVED");
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [viewingId, setViewingId] = useState<string | null>(null);
 	const [editTitle, setEditTitle] = useState("");
 	const [editDesc, setEditDesc] = useState("");
 	const [editStatus, setEditStatus] = useState<Task["status"]>("TODO");
-	const [editPaymentStatus, setEditPaymentStatus] = useState<Task["paymentStatus"]>("NO_ADVANCE_RECEIVED");
 	const [editStart, setEditStart] = useState<string>("");
 	const [editDue, setEditDue] = useState<string>("");
 	const [submitting, setSubmitting] = useState(false);
@@ -376,8 +373,7 @@ export default function TasksPage() {
 				dueAt: due ? new Date(due).toISOString() : undefined, 
 				customerId: customerId || undefined, 
 				customFields: { ...custom, attachments: uploadedFiles }, 
-				assigneeId: assigneeId || undefined,
-				paymentStatus: paymentStatus
+				assigneeId: assigneeId || undefined 
 			})
 		});
 		setSubmitting(false);
@@ -393,7 +389,6 @@ export default function TasksPage() {
 		setCustomerId("");
 		setAssigneeId("");
 		setCustom({});
-		setPaymentStatus("NO_ADVANCE_RECEIVED");
 		setFiles([]);
 		setShowNewCustomerForm(false);
 		setNewCustomerName("");
@@ -620,17 +615,6 @@ export default function TasksPage() {
 						value={custom["quantity"] ?? ""} 
 						onChange={e => setCustom({ ...custom, quantity: e.target.valueAsNumber || "" })} 
 					/>
-					
-					{/* Payment Status */}
-					<select 
-						className="w-full border rounded px-3 py-2"
-						value={paymentStatus}
-						onChange={e => setPaymentStatus(e.target.value as Task["paymentStatus"])}
-					>
-						<option value="NO_ADVANCE_RECEIVED">No Advance Received</option>
-						<option value="ADVANCE_RECEIVED">Advance Received</option>
-						<option value="FULL_PAYMENT_RECEIVED">Full Payment Received</option>
-					</select>
 
 					{/* Rigid Box specific fields */}
 					{custom["category"] === "Rigid Boxes" && (
@@ -905,7 +889,6 @@ export default function TasksPage() {
 													title: editTitle,
 													description: editDesc,
 													status: editStatus,
-													paymentStatus: editPaymentStatus,
 													startAt: editStart ? new Date(editStart).toISOString() : null,
 													dueAt: editDue ? new Date(editDue).toISOString() : null,
 													customerId: customerId || null,
@@ -941,20 +924,6 @@ export default function TasksPage() {
 												<option value="CANCELLED">CANCELLED</option>
 												<option value="ARCHIVED">ARCHIVED</option>
 											</select>
-											</div>
-										</div>
-										
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<label className="block text-sm font-medium mb-1">Payment Status</label>
-												<select className="w-full border rounded px-3 py-2" value={editPaymentStatus} onChange={e => setEditPaymentStatus(e.target.value as Task["paymentStatus"]) }>
-													<option value="NO_ADVANCE_RECEIVED">No Advance Received</option>
-													<option value="ADVANCE_RECEIVED">Advance Received</option>
-													<option value="FULL_PAYMENT_RECEIVED">Full Payment Received</option>
-												</select>
-											</div>
-											<div>
-												{/* Placeholder for future field */}
 											</div>
 										</div>
 
@@ -1255,47 +1224,27 @@ export default function TasksPage() {
 												)}
 											</span>
 										</div>
-										<div className="flex flex-col gap-1">
-											<select
-												value={t.status}
-												onChange={async (e) => {
-													const newStatus = e.target.value as Task["status"];
-													await fetch(`/api/tasks/${t.id}`, {
-														method: "PATCH",
-														headers: { "Content-Type": "application/json" },
-														body: JSON.stringify({ status: newStatus })
-													});
-													load();
-												}}
-												className="text-xs px-2 py-1 rounded border bg-white"
-												style={{ color: "var(--foreground)" }}
-											>
-												<option value="TODO">TODO</option>
-												<option value="IN_PROGRESS">IN_PROGRESS</option>
-												<option value="BLOCKED">BLOCKED</option>
-												<option value="DONE">DONE</option>
-												<option value="CANCELLED">CANCELLED</option>
-												<option value="ARCHIVED">ARCHIVED</option>
-											</select>
-											<select
-												value={t.paymentStatus || "NO_ADVANCE_RECEIVED"}
-												onChange={async (e) => {
-													const newPaymentStatus = e.target.value as Task["paymentStatus"];
-													await fetch(`/api/tasks/${t.id}`, {
-														method: "PATCH",
-														headers: { "Content-Type": "application/json" },
-														body: JSON.stringify({ paymentStatus: newPaymentStatus })
-													});
-													load();
-												}}
-												className="text-xs px-2 py-1 rounded border bg-white"
-												style={{ color: "var(--foreground)" }}
-											>
-												<option value="NO_ADVANCE_RECEIVED">No Advance</option>
-												<option value="ADVANCE_RECEIVED">Advance</option>
-												<option value="FULL_PAYMENT_RECEIVED">Full Payment</option>
-											</select>
-										</div>
+										<select
+											value={t.status}
+											onChange={async (e) => {
+												const newStatus = e.target.value as Task["status"];
+												await fetch(`/api/tasks/${t.id}`, {
+													method: "PATCH",
+													headers: { "Content-Type": "application/json" },
+													body: JSON.stringify({ status: newStatus })
+												});
+												load();
+											}}
+											className="text-xs px-2 py-1 rounded border bg-white"
+											style={{ color: "var(--foreground)" }}
+										>
+											<option value="TODO">TODO</option>
+											<option value="IN_PROGRESS">IN_PROGRESS</option>
+											<option value="BLOCKED">BLOCKED</option>
+											<option value="DONE">DONE</option>
+											<option value="CANCELLED">CANCELLED</option>
+											<option value="ARCHIVED">ARCHIVED</option>
+										</select>
 							</div>
 							{t.dueAt && <p className="text-xs text-gray-600 mt-1">Due: {new Date(t.dueAt).toLocaleString()}</p>}
 									<div className="mt-2 flex gap-2">
@@ -1307,7 +1256,6 @@ export default function TasksPage() {
 												setEditTitle(t.title);
 												setEditDesc(t.description);
 												setEditStatus(t.status);
-												setEditPaymentStatus(t.paymentStatus || "NO_ADVANCE_RECEIVED");
 												setEditStart(t.startAt ? new Date(t.startAt).toISOString().slice(0,16) : "");
 												setEditDue(t.dueAt ? new Date(t.dueAt).toISOString().slice(0,16) : "");
 												setCustomerId(t.customerId || "");

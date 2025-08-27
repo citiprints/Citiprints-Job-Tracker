@@ -8,7 +8,6 @@ const CreateTaskSchema = z.object({
 	description: z.string().optional(),
 	status: z.enum(["TODO","IN_PROGRESS","BLOCKED","DONE","CANCELLED","ARCHIVED"]).optional(),
 	priority: z.enum(["LOW","MEDIUM","HIGH","URGENT"]).optional(),
-	paymentStatus: z.enum(["NO_ADVANCE_RECEIVED","ADVANCE_RECEIVED","FULL_PAYMENT_RECEIVED"]).optional(),
 	startAt: z.string().optional(),
 	dueAt: z.string().optional(),
 	estimatedHours: z.number().optional(),

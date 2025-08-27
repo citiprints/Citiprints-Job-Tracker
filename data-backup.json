@@ -1,0 +1,174 @@
+{
+  "users": [
+    {
+      "id": "cmesavfst0000sdy6hmmh3vv4",
+      "email": "ahmadshakil3098@gmail.com",
+      "password": "$2b$12$fOn0gWIwcOXVf1pLPpAs1OWhgoa1yne.HOMJ3sC6RwQTDW9NPBmB2",
+      "name": "Shakil",
+      "role": "ADMIN",
+      "active": true,
+      "createdAt": "2025-08-26T08:44:38.717Z",
+      "updatedAt": "2025-08-26T08:44:38.717Z"
+    },
+    {
+      "id": "cmesoxkye0004ihrne8jrfiwf",
+      "email": "shaikmakdoom@gmail.com",
+      "password": "$2b$12$Bzs8UA9mIYXcuihVrePmzOvBmRBrXpz1aBSLYQMskD74nAtsZlv/e",
+      "name": "Shaik",
+      "role": "WORKER",
+      "active": true,
+      "createdAt": "2025-08-26T15:18:13.335Z",
+      "updatedAt": "2025-08-26T15:22:42.544Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "cmet1g2l9001ok6qqonj16bib",
+      "title": "Pastry Kadai Box",
+      "description": "",
+      "status": "IN_PROGRESS",
+      "priority": "MEDIUM",
+      "startAt": null,
+      "dueAt": "2025-08-30T13:00:00.000Z",
+      "estimatedHours": null,
+      "actualHours": null,
+      "customer": null,
+      "customerId": "cmet1f2cy001mk6qqmw7xrt82",
+      "jobNumber": null,
+      "customFields": "{\"category\":\"Rigid Boxes\",\"boxType\":\"Magnetic\",\"size\":\"7x7x3\",\"topOuter\":\"a\",\"topInner\":\"b\",\"bottomOuter\":\"c\",\"bottomInner\":\"d\",\"hasPartition\":false,\"attachments\":[],\"quantity\":\"300\"}",
+      "createdById": "cmesoxkye0004ihrne8jrfiwf",
+      "createdAt": "2025-08-26T21:08:31.389Z",
+      "updatedAt": "2025-08-26T21:11:03.167Z"
+    },
+    {
+      "id": "cmetpvjap001tk6qq5s4edcgl",
+      "title": "Refex",
+      "description": "",
+      "status": "TODO",
+      "priority": "MEDIUM",
+      "startAt": "2025-08-26T18:30:00.000Z",
+      "dueAt": "2025-09-04T18:30:00.000Z",
+      "estimatedHours": null,
+      "actualHours": null,
+      "customer": null,
+      "customerId": "cmetpv5d7001rk6qq1zkqpqre",
+      "jobNumber": null,
+      "customFields": "{\"quantity\":1500,\"attachments\":[]}",
+      "createdById": "cmesoxkye0004ihrne8jrfiwf",
+      "createdAt": "2025-08-27T08:32:23.665Z",
+      "updatedAt": "2025-08-27T08:32:23.665Z"
+    },
+    {
+      "id": "cmetpy6mt001xk6qqg3t1gxjp",
+      "title": "dh",
+      "description": "fdhd",
+      "status": "TODO",
+      "priority": "MEDIUM",
+      "startAt": null,
+      "dueAt": "2025-08-28T18:30:00.000Z",
+      "estimatedHours": null,
+      "actualHours": null,
+      "customer": null,
+      "customerId": "cmet1f2cy001mk6qqmw7xrt82",
+      "jobNumber": null,
+      "customFields": "{\"category\":\"Rigid Boxes\",\"attachments\":[]}",
+      "createdById": "cmesoxkye0004ihrne8jrfiwf",
+      "createdAt": "2025-08-27T08:34:27.221Z",
+      "updatedAt": "2025-08-27T08:34:27.221Z"
+    }
+  ],
+  "customers": [
+    {
+      "id": "cmesnmdcc0000wvgoupcz6c3e",
+      "name": "Shakil",
+      "email": "jmsaleemuddin@gmail.com",
+      "phone": "09444942151",
+      "company": null,
+      "address": "49 Ethiraj Salai Egmore\nFloor 16, E163",
+      "createdAt": "2025-08-26T14:41:30.636Z",
+      "updatedAt": "2025-08-26T16:00:12.908Z"
+    },
+    {
+      "id": "cmet1f2cy001mk6qqmw7xrt82",
+      "name": "Pastry Kadai",
+      "email": "pastrykadai@gmail.com",
+      "phone": "9444924323",
+      "company": "Pastry Kadai",
+      "address": "",
+      "createdAt": "2025-08-26T21:07:44.434Z",
+      "updatedAt": "2025-08-26T21:07:44.434Z"
+    },
+    {
+      "id": "cmetpv5d7001rk6qq1zkqpqre",
+      "name": "Refex",
+      "email": "Refex@gmail.com",
+      "phone": "913493249",
+      "company": "Refex",
+      "address": "",
+      "createdAt": "2025-08-27T08:32:05.612Z",
+      "updatedAt": "2025-08-27T08:32:05.612Z"
+    }
+  ],
+  "customFields": [],
+  "sessions": [
+    {
+      "id": "cmesavi1h0002sdy6p6t1s7ob",
+      "userId": "cmesavfst0000sdy6hmmh3vv4",
+      "expiresAt": "2025-09-02T08:44:41.619Z",
+      "createdAt": "2025-08-26T08:44:41.622Z"
+    },
+    {
+      "id": "cmeslwrkh000611j3xo5rhbwv",
+      "userId": "cmesavfst0000sdy6hmmh3vv4",
+      "expiresAt": "2025-09-02T13:53:36.400Z",
+      "createdAt": "2025-08-26T13:53:36.401Z"
+    },
+    {
+      "id": "cmesqcmf7000hk6qqlqw4fge3",
+      "userId": "cmesoxkye0004ihrne8jrfiwf",
+      "expiresAt": "2025-09-02T15:57:54.690Z",
+      "createdAt": "2025-08-26T15:57:54.691Z"
+    }
+  ],
+  "subtasks": [
+    {
+      "id": "cmet1h6sq001qk6qq71e77ie1",
+      "taskId": "cmet1g2l9001ok6qqonj16bib",
+      "title": "Send for Print - To Tint & Print",
+      "status": "TODO",
+      "assigneeId": "cmesoxkye0004ihrne8jrfiwf",
+      "dueAt": "2025-08-27T18:30:00.000Z",
+      "estimatedHours": null,
+      "actualHours": null,
+      "order": 1,
+      "createdAt": "2025-08-26T21:09:23.499Z",
+      "updatedAt": "2025-08-27T08:17:23.785Z"
+    },
+    {
+      "id": "cmetpvzal001vk6qqyr8ac8by",
+      "taskId": "cmetpvjap001tk6qq5s4edcgl",
+      "title": "Send Partition Die",
+      "status": "TODO",
+      "assigneeId": "cmesavfst0000sdy6hmmh3vv4",
+      "dueAt": "2025-08-27T18:30:00.000Z",
+      "estimatedHours": 1,
+      "actualHours": null,
+      "order": 1,
+      "createdAt": "2025-08-27T08:32:44.398Z",
+      "updatedAt": "2025-08-27T08:32:44.398Z"
+    }
+  ],
+  "assignments": [
+    {
+      "id": "cmetpy6mv001zk6qqgbnmuvww",
+      "taskId": "cmetpy6mt001xk6qqg3t1gxjp",
+      "userId": "cmesoxkye0004ihrne8jrfiwf",
+      "role": "assignee",
+      "createdAt": "2025-08-27T08:34:27.223Z"
+    }
+  ],
+  "comments": [],
+  "attachments": [],
+  "activities": [],
+  "exportedAt": "2025-08-27T20:03:01.789Z"
+}
