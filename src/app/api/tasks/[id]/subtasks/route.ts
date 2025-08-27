@@ -12,22 +12,24 @@ const CreateSubtaskSchema = z.object({
 	order: z.number().int().optional()
 });
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
 	const user = await getCurrentUser();
 	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	const subtasks = await prisma.subtask.findMany({ where: { taskId: params.id } });
+	const { id } = await params;
+	const subtasks = await prisma.subtask.findMany({ where: { taskId: id } });
 	return NextResponse.json({ subtasks });
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
 	const user = await getCurrentUser();
 	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	try {
 		const json = await request.json();
 		const data = CreateSubtaskSchema.parse(json);
+		const { id } = await params;
 		const subtask = await prisma.subtask.create({
 			data: {
-				taskId: params.id,
+				taskId: id,
 				title: data.title,
 				status: (data.status as any) ?? "TODO",
 				assigneeId: data.assigneeId ?? null,

@@ -10,14 +10,15 @@ const UpdateFieldSchema = z.object({
     order: z.number().int().optional()
 });
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
         const json = await request.json();
         const data = UpdateFieldSchema.parse(json);
+        const { id } = await params;
         const field = await prisma.customFieldDef.update({
-            where: { id: params.id },
+            where: { id },
             data: {
                 ...(data.label !== undefined ? { label: data.label } : {}),
                 ...(data.type !== undefined ? { type: data.type } : {}),
@@ -32,11 +33,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     try {
-        await prisma.customFieldDef.delete({ where: { id: params.id } });
+        const { id } = await params;
+        await prisma.customFieldDef.delete({ where: { id } });
         return NextResponse.json({ ok: true });
     } catch (error) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
