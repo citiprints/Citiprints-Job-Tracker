@@ -1074,7 +1074,7 @@ export default function TasksPage() {
 											{t.customFields.attachments.map((attachment: string, index: number) => (
 												<div key={index} className="flex flex-wrap items-center justify-between gap-2 p-2 bg-gray-100 rounded">
 													<a
-														href={attachment.startsWith('http') ? attachment : `/uploads/${attachment}`}
+														href={attachment.startsWith('http') ? attachment : attachment.startsWith('/api/files/') ? attachment : `/api/files/${encodeURIComponent(attachment)}`}
 														target="_blank"
 														rel="noopener noreferrer"
 														className="text-sm truncate max-w-[60vw]"
@@ -1606,7 +1606,7 @@ export default function TasksPage() {
 											{task.customFields.attachments.map((attachment: string, index: number) => (
 												<div key={index} className="flex items-center gap-2">
 													<a
-														href={attachment.startsWith('http') ? attachment : `/uploads/${attachment}`}
+														href={attachment.startsWith('http') ? attachment : attachment.startsWith('/api/files/') ? attachment : `/api/files/${encodeURIComponent(attachment)}`}
 														target="_blank"
 														rel="noopener noreferrer"
 														className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"

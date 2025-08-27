@@ -50,8 +50,8 @@ export async function POST_R2_UPLOAD(request: NextRequest) {
 			// CacheControl: "public, max-age=31536000, immutable", // uncomment if you want long cache
 		}));
 
-		// Use direct R2 endpoint URL format that works without public access
-		const url = `${R2_ENDPOINT.replace(/\/$/, "")}/${R2_BUCKET}/${key}`;
+		// Return URL that points to our proxy endpoint
+		const url = `/api/files/${encodeURIComponent(key)}`;
 
 		return NextResponse.json({
 			filename: key,

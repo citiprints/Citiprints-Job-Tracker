@@ -460,7 +460,7 @@ export default function DashboardPage() {
 										<div className="space-y-1">
 											{task.customFields.attachments.map((attachment: string, index: number) => (
 												<div key={index} className="flex items-center gap-2">
-													<a href={`/uploads/${attachment}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">📎 {attachment}</a>
+													<a href={attachment.startsWith('http') ? attachment : attachment.startsWith('/api/files/') ? attachment : `/api/files/${encodeURIComponent(attachment)}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">📎 {attachment}</a>
 												</div>
 											))}
 										</div>
