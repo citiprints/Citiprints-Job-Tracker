@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { TaskLoadingSkeleton } from "../components/LoadingSkeleton";
 
 type Task = {
 	id: string;
@@ -48,7 +49,7 @@ export default function TasksPage() {
 	const [editStatus, setEditStatus] = useState<Task["status"]>("TODO");
 	const [editStart, setEditStart] = useState<string>("");
 	const [editDue, setEditDue] = useState<string>("");
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [customers, setCustomers] = useState<{ id: string; name: string }[]>([]);
 	const [customerId, setCustomerId] = useState<string>("");
@@ -141,44 +142,51 @@ export default function TasksPage() {
 	}
 
 	async function load() {
-		const [resTasks, resFields, resCustomers, resUsers] = await Promise.all([
-			fetch("/api/tasks"),
-			fetch("/api/custom-fields"),
-			fetch("/api/customers"),
-			fetch("/api/users")
-		]);
-		if (resTasks.ok) {
-			const json = await resTasks.json();
-			const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
-				...t,
-				customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
-			}));
-			
-			// Load subtasks for each task
-			const tasksWithSubtasks = await Promise.all(
-				loaded.map(async (task) => {
-					const resSubtasks = await fetch(`/api/subtasks?taskId=${task.id}`);
-					if (resSubtasks.ok) {
-						const subtasksData = await resSubtasks.json();
-						return { ...task, subtasks: subtasksData.subtasks || [] };
-					}
-					return { ...task, subtasks: [] };
-				})
-			);
-			
-			setTasks(tasksWithSubtasks);
-		}
-		if (resFields.ok) {
-			const json = await resFields.json();
-			setFields(json.fields ?? []);
-		}
-		if (resCustomers.ok) {
-			const json = await resCustomers.json();
-			setCustomers((json.customers ?? []).map((c: any) => ({ id: c.id, name: c.name })));
-		}
-		if (resUsers.ok) {
-			const json = await resUsers.json();
-			setUsers((json.users ?? []).map((u: any) => ({ id: u.id, name: u.name })));
+		setLoading(true);
+		try {
+			const [resTasks, resFields, resCustomers, resUsers] = await Promise.all([
+				fetch("/api/tasks"),
+				fetch("/api/custom-fields"),
+				fetch("/api/customers"),
+				fetch("/api/users")
+			]);
+			if (resTasks.ok) {
+				const json = await resTasks.json();
+				const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
+					...t,
+					customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
+				}));
+				
+				// Load subtasks for each task
+				const tasksWithSubtasks = await Promise.all(
+					loaded.map(async (task) => {
+						const resSubtasks = await fetch(`/api/subtasks?taskId=${task.id}`);
+						if (resSubtasks.ok) {
+							const subtasksData = await resSubtasks.json();
+							return { ...task, subtasks: subtasksData.subtasks || [] };
+						}
+						return { ...task, subtasks: [] };
+					})
+				);
+				
+				setTasks(tasksWithSubtasks);
+			}
+			if (resFields.ok) {
+				const json = await resFields.json();
+				setFields(json.fields ?? []);
+			}
+			if (resCustomers.ok) {
+				const json = await resCustomers.json();
+				setCustomers((json.customers ?? []).map((c: any) => ({ id: c.id, name: c.name })));
+			}
+			if (resUsers.ok) {
+				const json = await resUsers.json();
+				setUsers((json.users ?? []).map((u: any) => ({ id: u.id, name: u.name })));
+			}
+		} catch (error) {
+			console.error("Failed to load data:", error);
+		} finally {
+			setLoading(false);
 		}
 	}
 

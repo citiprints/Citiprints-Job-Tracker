@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { LoadingSkeleton } from "../components/LoadingSkeleton";
 
 type Task = {
 	id: string;
@@ -32,6 +33,7 @@ type Subtask = {
 export default function DashboardPage() {
 	const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
 	const [tasks, setTasks] = useState<Task[]>([]);
+	const [loading, setLoading] = useState(true);
 	const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 	const [monthCursor, setMonthCursor] = useState(() => new Date());
 	const [viewingId, setViewingId] = useState<string | null>(null);
@@ -51,27 +53,34 @@ export default function DashboardPage() {
 
 	useEffect(() => {
 		async function load() {
-			const res = await fetch("/api/tasks");
-			if (res.ok) {
-			const json = await res.json();
-				const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
-					...t,
-					customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
-				}));
-				
-				// Load subtasks for each task
-				const tasksWithSubtasks = await Promise.all(
-					loaded.map(async (task) => {
-						const resSubtasks = await fetch(`/api/subtasks?taskId=${task.id}`);
-						if (resSubtasks.ok) {
-							const subtasksData = await resSubtasks.json();
-							return { ...task, subtasks: subtasksData.subtasks || [] };
-						}
-						return { ...task, subtasks: [] };
-					})
-				);
-				
-				setTasks(tasksWithSubtasks);
+			setLoading(true);
+			try {
+				const res = await fetch("/api/tasks");
+				if (res.ok) {
+					const json = await res.json();
+					const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
+						...t,
+						customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
+					}));
+					
+					// Load subtasks for each task
+					const tasksWithSubtasks = await Promise.all(
+						loaded.map(async (task) => {
+							const resSubtasks = await fetch(`/api/subtasks?taskId=${task.id}`);
+							if (resSubtasks.ok) {
+								const subtasksData = await resSubtasks.json();
+								return { ...task, subtasks: subtasksData.subtasks || [] };
+							}
+							return { ...task, subtasks: [] };
+						})
+					);
+					
+					setTasks(tasksWithSubtasks);
+				}
+			} catch (error) {
+				console.error("Failed to load tasks:", error);
+			} finally {
+				setLoading(false);
 			}
 		}
 		load();
@@ -130,6 +139,15 @@ export default function DashboardPage() {
 		arr.push(t);
 		tasksByDate.set(key, arr);
 	});
+
+	if (loading) {
+		return (
+			<div className="space-y-6">
+				<h1 className="text-2xl font-semibold">Dashboard</h1>
+				<LoadingSkeleton />
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-6">
