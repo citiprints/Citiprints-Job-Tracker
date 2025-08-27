@@ -16,6 +16,7 @@ const CreateTaskSchema = z.object({
 	jobNumber: z.string().optional(),
 	customFields: z.any().optional(),
 	assigneeId: z.string().optional(),
+	paymentStatus: z.enum(["No Advance Received","Advance Received","Full Payment Received"]).optional(),
 });
 
 export async function GET() {
@@ -58,7 +59,8 @@ export async function POST(request: Request) {
 				customerId: data.customerId,
 				jobNumber: data.jobNumber,
 				customFields: data.customFields ? JSON.stringify(data.customFields) : undefined,
-				createdById: user.id
+				createdById: user.id,
+				paymentStatus: data.paymentStatus ?? "No Advance Received"
 			}
 		});
 
