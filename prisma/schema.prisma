@@ -42,6 +42,7 @@ model Task {
   description    String       @default("")
   status         String       @default("TODO")
   priority       String       @default("MEDIUM")
+  paymentStatus  String       @default("NO_ADVANCE_RECEIVED")
   startAt        DateTime?
   dueAt          DateTime?
   estimatedHours Float?
