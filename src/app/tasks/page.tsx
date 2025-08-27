@@ -68,6 +68,7 @@ export default function TasksPage() {
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [fields, setFields] = useState<Field[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [categoryFilter, setCategoryFilter] = useState<string>("all");
 	const [title, setTitle] = useState("");
 	const [desc, setDesc] = useState("");
 	const [start, setStart] = useState<string>("");
@@ -794,7 +795,9 @@ export default function TasksPage() {
 					<div className="flex flex-wrap items-center gap-2">
 						<button
 							onClick={async () => {
-								const completedTasks = tasks.filter(t => t.status === "DONE");
+								const completedTasks = tasks
+									.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter)
+									.filter(t => t.status === "DONE");
 								if (completedTasks.length === 0) {
 									alert("No completed tasks to archive.");
 									return;
@@ -810,9 +813,11 @@ export default function TasksPage() {
 									load();
 								}
 							}}
-							className="text-xs px-3 py-1 rounded border bg-gray-100 hover:bg-gray-200"
+							className="rounded border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200"
 						>
-							Archive Completed ({tasks.filter(t => t.status === "DONE").length})
+							Archive Completed ({tasks
+								.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter)
+								.filter(t => t.status === "DONE").length})
 						</button>
 						<a className="rounded border px-3 py-2 text-sm" href="/api/export/tasks-csv">Export CSV</a>
 						<form action="/api/export/tasks-sheets" method="post" className="inline">
@@ -820,13 +825,38 @@ export default function TasksPage() {
 						</form>
 					</div>
 				</div>
+				
+				{/* Category Filter */}
+				<div className="mb-4 flex items-center justify-between">
+					<div>
+						<label className="block text-sm font-medium mb-2">Filter by Category:</label>
+						<select 
+							value={categoryFilter} 
+							onChange={(e) => setCategoryFilter(e.target.value)}
+							className="rounded border px-3 py-2 text-sm"
+						>
+							<option value="all">All Categories</option>
+							<option value="Rigid Boxes">Rigid Boxes</option>
+							<option value="Cake Boxes">Cake Boxes</option>
+							<option value="Paper Bags">Paper Bags</option>
+							<option value="Stickers">Stickers</option>
+							<option value="Cards">Cards</option>
+						</select>
+					</div>
+					<div className="text-sm text-gray-600">
+						{tasks.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter).length} task{tasks.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter).length !== 1 ? 's' : ''} shown
+					</div>
+				</div>
+				
 				{loading ? (
 					<TasksSkeleton />
 				) : tasks.length === 0 ? (
 					<p className="text-center text-gray-500">No tasks yet. Create one!</p>
 				) : (
 				<ul className="space-y-2">
-						{tasks.map((t, index) => (
+						{tasks
+							.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter)
+							.map((t, index) => (
 							<li key={t.id} className="border border-black rounded p-3">
 								{editingId === t.id ? (
 									<form
