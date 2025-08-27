@@ -50,10 +50,8 @@ export async function POST_R2_UPLOAD(request: NextRequest) {
 			// CacheControl: "public, max-age=31536000, immutable", // uncomment if you want long cache
 		}));
 
-		// Prefer explicit public base if provided; fallback to endpoint/bucket
-		const url = R2_PUBLIC_BASE
-			? `${R2_PUBLIC_BASE}/${key}`
-			: `${R2_ENDPOINT.replace(/\/$/, "")}/${R2_BUCKET}/${key}`;
+		// Use direct R2 endpoint URL format that works without public access
+		const url = `${R2_ENDPOINT.replace(/\/$/, "")}/${R2_BUCKET}/${key}`;
 
 		return NextResponse.json({
 			filename: key,
