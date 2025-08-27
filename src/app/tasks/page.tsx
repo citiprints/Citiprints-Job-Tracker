@@ -1,3 +1,4 @@
+// FORCE REBUILD - Loading animations added
 "use client";
 import React, { useEffect, useState } from "react";
 
