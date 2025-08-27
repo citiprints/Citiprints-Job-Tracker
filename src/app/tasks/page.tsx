@@ -6,7 +6,7 @@ type Task = {
 	id: string;
 	title: string;
 	description: string;
-	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED";
+	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED";
 	priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 	startAt?: string | null;
 	dueAt: string | null;
@@ -176,13 +176,13 @@ export default function TasksPage() {
 		setLoading(true);
 		try {
 			const [resTasks, resFields, resCustomers, resUsers] = await Promise.all([
-				fetch("/api/tasks"),
+			fetch("/api/tasks"),
 				fetch("/api/custom-fields"),
 				fetch("/api/customers"),
 				fetch("/api/users")
-			]);
-			if (resTasks.ok) {
-				const json = await resTasks.json();
+		]);
+		if (resTasks.ok) {
+			const json = await resTasks.json();
 				const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
 					...t,
 					customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
@@ -200,11 +200,13 @@ export default function TasksPage() {
 					})
 				);
 				
-				setTasks(tasksWithSubtasks);
-			}
-			if (resFields.ok) {
-				const json = await resFields.json();
-				setFields(json.fields ?? []);
+				// Filter out archived tasks from main list
+				const activeTasks = tasksWithSubtasks.filter(task => task.status !== "ARCHIVED");
+				setTasks(activeTasks);
+		}
+		if (resFields.ok) {
+			const json = await resFields.json();
+			setFields(json.fields ?? []);
 			}
 			if (resCustomers.ok) {
 				const json = await resCustomers.json();
@@ -790,6 +792,28 @@ export default function TasksPage() {
 				<div className="flex flex-wrap items-center justify-between gap-2 mb-2">
 					<h2 className="text-lg font-medium">Tasks</h2>
 					<div className="flex flex-wrap items-center gap-2">
+						<button
+							onClick={async () => {
+								const completedTasks = tasks.filter(t => t.status === "DONE");
+								if (completedTasks.length === 0) {
+									alert("No completed tasks to archive.");
+									return;
+								}
+								if (confirm(`Archive ${completedTasks.length} completed task${completedTasks.length !== 1 ? 's' : ''}?`)) {
+									for (const task of completedTasks) {
+										await fetch(`/api/tasks/${task.id}`, {
+											method: "PATCH",
+											headers: { "Content-Type": "application/json" },
+											body: JSON.stringify({ status: "ARCHIVED" })
+										});
+									}
+									load();
+								}
+							}}
+							className="text-xs px-3 py-1 rounded border bg-gray-100 hover:bg-gray-200"
+						>
+							Archive Completed ({tasks.filter(t => t.status === "DONE").length})
+						</button>
 						<a className="rounded border px-3 py-2 text-sm" href="/api/export/tasks-csv">Export CSV</a>
 						<form action="/api/export/tasks-sheets" method="post" className="inline">
 							<button className="rounded border px-3 py-2 text-sm" type="submit">Export to Google Sheets</button>
@@ -801,7 +825,7 @@ export default function TasksPage() {
 				) : tasks.length === 0 ? (
 					<p className="text-center text-gray-500">No tasks yet. Create one!</p>
 				) : (
-					<ul className="space-y-2">
+				<ul className="space-y-2">
 						{tasks.map((t, index) => (
 							<li key={t.id} className="border border-black rounded p-3">
 								{editingId === t.id ? (
@@ -862,13 +886,14 @@ export default function TasksPage() {
 											</div>
 											<div>
 												<label className="block text-sm font-medium mb-1">Status</label>
-												<select className="w-full border rounded px-3 py-2" value={editStatus} onChange={e => setEditStatus(e.target.value as Task["status"]) }>
-													<option value="TODO">TODO</option>
-													<option value="IN_PROGRESS">IN_PROGRESS</option>
-													<option value="BLOCKED">BLOCKED</option>
-													<option value="DONE">DONE</option>
-													<option value="CANCELLED">CANCELLED</option>
-												</select>
+																							<select className="w-full border rounded px-3 py-2" value={editStatus} onChange={e => setEditStatus(e.target.value as Task["status"]) }>
+												<option value="TODO">TODO</option>
+												<option value="IN_PROGRESS">IN_PROGRESS</option>
+												<option value="BLOCKED">BLOCKED</option>
+												<option value="DONE">DONE</option>
+												<option value="CANCELLED">CANCELLED</option>
+												<option value="ARCHIVED">ARCHIVED</option>
+											</select>
 											</div>
 										</div>
 
@@ -1188,6 +1213,7 @@ export default function TasksPage() {
 											<option value="BLOCKED">BLOCKED</option>
 											<option value="DONE">DONE</option>
 											<option value="CANCELLED">CANCELLED</option>
+											<option value="ARCHIVED">ARCHIVED</option>
 										</select>
 							</div>
 							{t.dueAt && <p className="text-xs text-gray-600 mt-1">Due: {new Date(t.dueAt).toLocaleString()}</p>}
@@ -1217,23 +1243,6 @@ export default function TasksPage() {
 										>
 											View
 										</button>
-										{(t.status === "DONE" || t.status === "CANCELLED") && (
-											<button
-												type="button"
-												className="rounded border px-3 py-2 bg-orange-50 border-orange-300 text-orange-700 hover:bg-orange-100"
-												onClick={async () => {
-													if (!confirm("Archive this completed task?")) return;
-													await fetch(`/api/tasks/${t.id}`, {
-														method: "PATCH",
-														headers: { "Content-Type": "application/json" },
-														body: JSON.stringify({ archived: true })
-													});
-													load();
-												}}
-											>
-												Archive
-											</button>
-										)}
 										<button
 											type="button"
 											className="rounded border px-3 py-2"
@@ -1485,7 +1494,7 @@ export default function TasksPage() {
 							)}
 						</li>
 					))}
-					</ul>
+				</ul>
 				)}
 			</section>
 

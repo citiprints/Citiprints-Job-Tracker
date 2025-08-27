@@ -6,7 +6,7 @@ import { z } from "zod";
 const CreateTaskSchema = z.object({
 	title: z.string().min(1),
 	description: z.string().optional(),
-	status: z.enum(["TODO","IN_PROGRESS","BLOCKED","DONE","CANCELLED"]).optional(),
+	status: z.enum(["TODO","IN_PROGRESS","BLOCKED","DONE","CANCELLED","ARCHIVED"]).optional(),
 	priority: z.enum(["LOW","MEDIUM","HIGH","URGENT"]).optional(),
 	startAt: z.string().optional(),
 	dueAt: z.string().optional(),
@@ -18,25 +18,10 @@ const CreateTaskSchema = z.object({
 	assigneeId: z.string().optional(),
 });
 
-export async function GET(request: Request) {
+export async function GET() {
 	const user = await getCurrentUser();
 	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	
-	const { searchParams } = new URL(request.url);
-	const archived = searchParams.get('archived');
-	
-	const whereClause: any = {};
-	if (archived === 'true') {
-		whereClause.archived = true;
-	} else if (archived === 'false') {
-		whereClause.archived = false;
-	} else {
-		// Default: show non-archived tasks
-		whereClause.archived = false;
-	}
-	
 	const tasks = await prisma.task.findMany({
-		where: whereClause,
 		orderBy: { createdAt: "desc" },
 		include: { 
 			assignments: { 

@@ -5,7 +5,7 @@ type Task = {
 	id: string;
 	title: string;
 	description: string;
-	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED";
+	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED";
 	priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 	startAt?: string | null;
 	dueAt: string | null;
@@ -118,7 +118,9 @@ export default function DashboardPage() {
 						})
 					);
 					
-					setTasks(tasksWithSubtasks);
+					// Filter out archived tasks from dashboard
+				const activeTasks = tasksWithSubtasks.filter(task => task.status !== "ARCHIVED");
+				setTasks(activeTasks);
 				}
 			} catch (error) {
 				console.error("Failed to load tasks:", error);

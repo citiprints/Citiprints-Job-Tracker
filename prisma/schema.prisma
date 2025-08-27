@@ -51,7 +51,6 @@ model Task {
   customerRef    Customer?    @relation(fields: [customerId], references: [id])
   jobNumber      String?
   customFields   String?
-  archived       Boolean      @default(false)
 
   createdById String
   createdBy   User         @relation("TasksCreated", fields: [createdById], references: [id])
@@ -68,7 +67,6 @@ model Task {
   @@index([status, dueAt])
   @@index([priority])
   @@index([customerId])
-  @@index([archived])
 }
 
 model Customer {

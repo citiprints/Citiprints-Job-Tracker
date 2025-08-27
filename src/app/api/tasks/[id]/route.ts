@@ -6,7 +6,7 @@ import { z } from "zod";
 const UpdateTaskSchema = z.object({
 	title: z.string().min(1).optional(),
 	description: z.string().optional(),
-	status: z.enum(["TODO","IN_PROGRESS","BLOCKED","DONE","CANCELLED"]).optional(),
+	status: z.enum(["TODO","IN_PROGRESS","BLOCKED","DONE","CANCELLED","ARCHIVED"]).optional(),
 	priority: z.enum(["LOW","MEDIUM","HIGH","URGENT"]).optional(),
 	startAt: z.string().nullable().optional(),
 	dueAt: z.string().nullable().optional(),
@@ -17,7 +17,6 @@ const UpdateTaskSchema = z.object({
 	assigneeId: z.string().nullable().optional(),
 	jobNumber: z.string().nullable().optional(),
 	customFields: z.any().nullable().optional(),
-	archived: z.boolean().optional(),
 });
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -71,7 +70,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 				...("customerId" in data ? { customerId: data.customerId ?? null } : {}),
 				...("jobNumber" in data ? { jobNumber: data.jobNumber ?? null } : {}),
 				...("customFields" in data ? { customFields: data.customFields == null ? null : JSON.stringify(data.customFields) } : {}),
-				...("archived" in data ? { archived: data.archived } : {}),
 			},
 			include: {
 				assignments: {
