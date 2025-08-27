@@ -1217,6 +1217,23 @@ export default function TasksPage() {
 										>
 											View
 										</button>
+										{(t.status === "DONE" || t.status === "CANCELLED") && (
+											<button
+												type="button"
+												className="rounded border px-3 py-2 bg-orange-50 border-orange-300 text-orange-700 hover:bg-orange-100"
+												onClick={async () => {
+													if (!confirm("Archive this completed task?")) return;
+													await fetch(`/api/tasks/${t.id}`, {
+														method: "PATCH",
+														headers: { "Content-Type": "application/json" },
+														body: JSON.stringify({ archived: true })
+													});
+													load();
+												}}
+											>
+												Archive
+											</button>
+										)}
 										<button
 											type="button"
 											className="rounded border px-3 py-2"

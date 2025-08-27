@@ -18,10 +18,25 @@ const CreateTaskSchema = z.object({
 	assigneeId: z.string().optional(),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
 	const user = await getCurrentUser();
 	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	
+	const { searchParams } = new URL(request.url);
+	const archived = searchParams.get('archived');
+	
+	const whereClause: any = {};
+	if (archived === 'true') {
+		whereClause.archived = true;
+	} else if (archived === 'false') {
+		whereClause.archived = false;
+	} else {
+		// Default: show non-archived tasks
+		whereClause.archived = false;
+	}
+	
 	const tasks = await prisma.task.findMany({
+		where: whereClause,
 		orderBy: { createdAt: "desc" },
 		include: { 
 			assignments: { 
