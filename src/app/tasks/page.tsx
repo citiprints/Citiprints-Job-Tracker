@@ -795,13 +795,13 @@ export default function TasksPage() {
 						</form>
 					</div>
 				</div>
-				<ul className="space-y-2">
-					{loading ? (
-						<TasksSkeleton />
-					) : tasks.length === 0 ? (
-						<p className="text-center text-gray-500">No tasks yet. Create one!</p>
-					) : (
-						tasks.map((t, index) => (
+				{loading ? (
+					<TasksSkeleton />
+				) : tasks.length === 0 ? (
+					<p className="text-center text-gray-500">No tasks yet. Create one!</p>
+				) : (
+					<ul className="space-y-2">
+						{tasks.map((t, index) => (
 							<li key={t.id} className="border border-black rounded p-3">
 								{editingId === t.id ? (
 									<form
@@ -1467,7 +1467,8 @@ export default function TasksPage() {
 							)}
 						</li>
 					))}
-				</ul>
+					</ul>
+				)}
 			</section>
 
 			{/* View Task Modal */}
