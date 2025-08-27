@@ -1,10 +1,26 @@
+// FORCE REBUILD - R2 UPLOAD CODE - DO NOT USE FILESYSTEM
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-export async function POST(request: NextRequest) {
+const R2_ENDPOINT = process.env.R2_ENDPOINT!;
+const R2_REGION = process.env.R2_REGION || "auto";
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID!;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY!;
+const R2_BUCKET = process.env.R2_BUCKET!;
+const R2_PUBLIC_BASE = process.env.R2_PUBLIC_BASE; // optional: https://<accountid>.r2.cloudflarestorage.com/<bucket>
+
+const s3 = new S3Client({
+	endpoint: R2_ENDPOINT,
+	region: R2_REGION,
+	credentials: {
+		accessKeyId: R2_ACCESS_KEY_ID,
+		secretAccessKey: R2_SECRET_ACCESS_KEY,
+	},
+	forcePathStyle: true, // important for R2
+});
+
+export async function POST_R2_UPLOAD(request: NextRequest) {
 	const user = await getCurrentUser();
 	if (!user) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -13,38 +29,42 @@ export async function POST(request: NextRequest) {
 	try {
 		const formData = await request.formData();
 		const file = formData.get("file") as File;
-		
+
 		if (!file) {
 			return NextResponse.json({ error: "No file provided" }, { status: 400 });
 		}
 
-		// Create uploads directory if it doesn't exist
-		const uploadsDir = join(process.cwd(), "public", "uploads");
-		if (!existsSync(uploadsDir)) {
-			await mkdir(uploadsDir, { recursive: true });
-		}
-
-		// Generate unique filename
 		const timestamp = Date.now();
 		const originalName = file.name;
-		const extension = originalName.split('.').pop();
-		const filename = `${timestamp}-${originalName}`;
-		const filepath = join(uploadsDir, filename);
+		const safeName = originalName.replace(/\s+/g, "_");
+		const key = `${timestamp}-${safeName}`;
 
-		// Convert file to buffer and save
 		const bytes = await file.arrayBuffer();
 		const buffer = Buffer.from(bytes);
-		await writeFile(filepath, buffer);
 
-		return NextResponse.json({ 
-			filename: filename,
-			originalName: originalName,
-			url: `/uploads/${filename}`
+		await s3.send(new PutObjectCommand({
+			Bucket: R2_BUCKET,
+			Key: key,
+			Body: buffer,
+			ContentType: file.type || "application/octet-stream",
+			// CacheControl: "public, max-age=31536000, immutable", // uncomment if you want long cache
+		}));
+
+		// Prefer explicit public base if provided; fallback to endpoint/bucket
+		const url = R2_PUBLIC_BASE
+			? `${R2_PUBLIC_BASE}/${key}`
+			: `${R2_ENDPOINT.replace(/\/$/, "")}/${R2_BUCKET}/${key}`;
+
+		return NextResponse.json({
+			filename: key,
+			originalName,
+			url,
 		});
-
 	} catch (error) {
-		console.error("File upload error:", error);
+		console.error("R2 upload error:", error);
 		return NextResponse.json({ error: "Failed to upload file" }, { status: 500 });
 	}
 }
-// Force rebuild Wed Aug 27 21:25:11 IST 2025
+
+// Alias for backward compatibility
+export const POST = POST_R2_UPLOAD;
