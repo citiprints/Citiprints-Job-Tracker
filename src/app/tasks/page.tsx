@@ -623,7 +623,7 @@ export default function TasksPage() {
 				)}
 				<h1 className="text-xl font-semibold mb-3">Create task</h1>
 				<form onSubmit={onCreate} className="space-y-3">
-					<input className="w-full border rounded px-3 py-2" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} required />
+					<input className="w-full border rounded px-3 py-2" placeholder="Title *" value={title} onChange={e => setTitle(e.target.value)} required />
 					<textarea className="w-full border rounded px-3 py-2" placeholder="Description" value={desc} onChange={e => setDesc(e.target.value)} />
 					{showNewCustomerForm ? (
 						<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
@@ -1107,7 +1107,7 @@ export default function TasksPage() {
 					<div className="space-y-2">
 						{fields.map(f => (
 							<div key={f.id} className="text-sm">
-								<label className="block mb-1">{f.label}</label>
+								<label className="block mb-1">{f.label}{f.required ? " *" : ""}</label>
 								{f.type === "TEXT" && (
 									<input className="w-full border rounded px-3 py-2" value={custom[f.key] ?? ""} onChange={e => setCustom({ ...custom, [f.key]: e.target.value })} />
 								)}
@@ -1331,7 +1331,7 @@ export default function TasksPage() {
 								>
 									<div className="grid grid-cols-2 gap-4">
 										<div>
-											<label className="block text-sm font-medium mb-1">Title</label>
+											<label className="block text-sm font-medium mb-1">Title *</label>
 											<input className="w-full border rounded px-3 py-2" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
 										</div>
 										<div>
@@ -1985,7 +1985,7 @@ export default function TasksPage() {
 											>
 												<div className="grid grid-cols-2 gap-3">
 													<div>
-														<label className="block text-xs font-medium mb-1">Title</label>
+														<label className="block text-xs font-medium mb-1">Title *</label>
 														<input
 															type="text"
 															className="w-full border rounded px-2 py-1 text-sm"
@@ -2069,7 +2069,7 @@ export default function TasksPage() {
 															>
 																<div className="grid grid-cols-2 gap-3">
 																	<div>
-																		<label className="block text-xs font-medium mb-1">Title</label>
+																		<label className="block text-xs font-medium mb-1">Title *</label>
 																		<input
 																			type="text"
 																			className="w-full border rounded px-2 py-1 text-sm"
