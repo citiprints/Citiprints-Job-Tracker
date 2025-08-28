@@ -69,6 +69,8 @@ export default function TasksPage() {
 	const [fields, setFields] = useState<Field[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [categoryFilter, setCategoryFilter] = useState<string>("all");
+	const [paymentFilter, setPaymentFilter] = useState<string>("all");
+	const [assignedToMeOnly, setAssignedToMeOnly] = useState<boolean>(false);
 	const [title, setTitle] = useState("");
 	const [desc, setDesc] = useState("");
 	const [start, setStart] = useState<string>("");
@@ -233,6 +235,20 @@ export default function TasksPage() {
 		if (!currentUser || !task.assignments) return false;
 		return task.assignments.some(assignment => assignment.user.id === currentUser.id);
 	}
+
+	// Derived filtered tasks (category + payment + assigned to me)
+	const filteredTasks = tasks
+		.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter)
+		.filter(task => {
+			if (paymentFilter === "all") return true;
+			const ps = task.customFields?.paymentStatus || "NO_PAYMENT_RECEIVED";
+			return (
+				(paymentFilter === "NO_PAYMENT_RECEIVED" && ps === "NO_PAYMENT_RECEIVED") ||
+				(paymentFilter === "ADVANCE_RECEIVED" && ps === "ADVANCE_RECEIVED") ||
+				(paymentFilter === "FULL_PAYMENT_RECEIVED" && ps === "FULL_PAYMENT_RECEIVED")
+			);
+		})
+		.filter(task => (!assignedToMeOnly ? true : isAssignedToMe(task)));
 
 	// Subtask functions
 	async function createSubtask(taskId: string) {
@@ -997,9 +1013,7 @@ export default function TasksPage() {
 					<div className="flex flex-wrap items-center gap-2">
 						<button
 							onClick={async () => {
-								const completedTasks = tasks
-									.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter)
-									.filter(t => t.status === "DONE");
+								const completedTasks = filteredTasks.filter(t => t.status === "DONE");
 								if (completedTasks.length === 0) {
 									alert("No completed tasks to archive.");
 									return;
@@ -1017,9 +1031,7 @@ export default function TasksPage() {
 							}}
 							className="rounded border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200"
 						>
-							Archive Completed ({tasks
-								.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter)
-								.filter(t => t.status === "DONE").length})
+							Archive Completed ({filteredTasks.filter(t => t.status === "DONE").length})
 						</button>
 						<a className="rounded border px-3 py-2 text-sm" href="/api/export/tasks-csv">Export CSV</a>
 						<form action="/api/export/tasks-sheets" method="post" className="inline">
@@ -1030,95 +1042,112 @@ export default function TasksPage() {
 				
 				{/* Category Filter */}
 				<div className="mb-4 flex items-center justify-between">
-					<div>
-						<label className="block text-sm font-medium mb-2">Filter by Category:</label>
-						<select 
-							value={categoryFilter} 
-							onChange={(e) => setCategoryFilter(e.target.value)}
-							className="rounded border px-3 py-2 text-sm"
-						>
-							<option value="all">All Categories</option>
-							<option value="Rigid Boxes">Rigid Boxes</option>
-							<option value="Cake Boxes">Cake Boxes</option>
-							<option value="Paper Bags">Paper Bags</option>
-							<option value="Stickers">Stickers</option>
-							<option value="Cards">Cards</option>
-							<option value="Others">Others</option>
-						</select>
+					<div className="flex flex-wrap items-end gap-4">
+						<div>
+							<label className="block text-sm font-medium mb-2">Filter by Category:</label>
+							<select 
+								value={categoryFilter} 
+								onChange={(e) => setCategoryFilter(e.target.value)}
+								className="rounded border px-3 py-2 text-sm"
+							>
+								<option value="all">All Categories</option>
+								<option value="Rigid Boxes">Rigid Boxes</option>
+								<option value="Cake Boxes">Cake Boxes</option>
+								<option value="Paper Bags">Paper Bags</option>
+								<option value="Stickers">Stickers</option>
+								<option value="Cards">Cards</option>
+								<option value="Others">Others</option>
+							</select>
+						</div>
+						<div>
+							<label className="block text-sm font-medium mb-2">Filter by Payment Status:</label>
+							<select 
+								value={paymentFilter} 
+								onChange={(e) => setPaymentFilter(e.target.value)}
+								className="rounded border px-3 py-2 text-sm"
+							>
+								<option value="all">All Payments</option>
+								<option value="NO_PAYMENT_RECEIVED">No Payment Received</option>
+								<option value="ADVANCE_RECEIVED">Advance Received</option>
+								<option value="FULL_PAYMENT_RECEIVED">Full Payment Received</option>
+							</select>
+						</div>
+						<label className="flex items-center gap-2 text-sm mb-2">
+							<input type="checkbox" checked={assignedToMeOnly} onChange={(e) => setAssignedToMeOnly(e.target.checked)} />
+							Assigned to me only
+						</label>
 					</div>
 					<div className="text-sm text-gray-600">
-						{tasks.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter).length} task{tasks.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter).length !== 1 ? 's' : ''} shown
+						{filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} shown
 					</div>
 				</div>
 				
 				{loading ? (
 					<TasksSkeleton />
-				) : tasks.length === 0 ? (
+				) : filteredTasks.length === 0 ? (
 					<p className="text-center text-gray-500">No tasks yet. Create one!</p>
 				) : (
 				<ul className="space-y-2">
-						{tasks
-							.filter(task => categoryFilter === "all" || task.customFields?.category === categoryFilter)
-							.map((t, index) => (
-							<li key={t.id} className="border border-black rounded p-3">
-								{editingId === t.id ? (
-									<form
-										onSubmit={async e => {
-											e.preventDefault();
-											
-											// Handle file uploads first
-											const uploadedFiles = [];
-											for (const file of files) {
-												const formData = new FormData();
-												formData.append('file', file);
-												const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-												if (uploadRes.ok) {
-													const uploadData = await uploadRes.json();
-													// Prefer URL from R2 upload; fallback to local path for legacy
-													uploadedFiles.push(uploadData.url || `/uploads/${uploadData.filename}`);
-												}
+						{filteredTasks.map((t, index) => (
+						<li key={t.id} className="border border-black rounded p-3">
+							{editingId === t.id ? (
+								<form
+									onSubmit={async e => {
+										e.preventDefault();
+										
+										// Handle file uploads first
+										const uploadedFiles = [];
+										for (const file of files) {
+											const formData = new FormData();
+											formData.append('file', file);
+											const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+											if (uploadRes.ok) {
+												const uploadData = await uploadRes.json();
+												// Prefer URL from R2 upload; fallback to local path for legacy
+												uploadedFiles.push(uploadData.url || `/uploads/${uploadData.filename}`);
 											}
+										}
 
-											// Combine existing attachments with new ones
-											const allAttachments = [
-												...(t.customFields?.attachments || []),
-												...uploadedFiles
-											];
+										// Combine existing attachments with new ones
+										const allAttachments = [
+											...(t.customFields?.attachments || []),
+											...uploadedFiles
+										];
 
-											await fetch(`/api/tasks/${t.id}`, {
-												method: "PATCH",
-												headers: { "Content-Type": "application/json" },
-												body: JSON.stringify({
-													title: editTitle,
-													description: editDesc,
-													status: editStatus,
-													startAt: editStart ? new Date(editStart).toISOString() : null,
-													dueAt: editDue ? new Date(editDue).toISOString() : null,
-													customerId: customerId || null,
-													assigneeId: assigneeId || null,
-													customFields: {
-														...t.customFields,
-														...custom,
-														attachments: allAttachments
-													}
-												})
-											});
-											setEditingId(null);
-											setFiles([]);
-											setCustom({});
-											setCustomerId("");
-											setAssigneeId("");
-											load();
-										}}
-										className="space-y-4"
-									>
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<label className="block text-sm font-medium mb-1">Title</label>
-												<input className="w-full border rounded px-3 py-2" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
-											</div>
-											<div>
-												<label className="block text-sm font-medium mb-1">Status</label>
+										await fetch(`/api/tasks/${t.id}`, {
+											method: "PATCH",
+											headers: { "Content-Type": "application/json" },
+											body: JSON.stringify({
+												title: editTitle,
+												description: editDesc,
+												status: editStatus,
+												startAt: editStart ? new Date(editStart).toISOString() : null,
+												dueAt: editDue ? new Date(editDue).toISOString() : null,
+												customerId: customerId || null,
+												assigneeId: assigneeId || null,
+												customFields: {
+													...t.customFields,
+													...custom,
+													attachments: allAttachments
+												}
+											})
+										});
+										setEditingId(null);
+										setFiles([]);
+										setCustom({});
+										setCustomerId("");
+										setAssigneeId("");
+										load();
+									}}
+									className="space-y-4"
+								>
+									<div className="grid grid-cols-2 gap-4">
+										<div>
+											<label className="block text-sm font-medium mb-1">Title</label>
+											<input className="w-full border rounded px-3 py-2" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
+										</div>
+										<div>
+											<label className="block text-sm font-medium mb-1">Status</label>
 																							<select className="w-full border rounded px-3 py-2" value={editStatus} onChange={e => setEditStatus(e.target.value as Task["status"]) }>
 												<option value="TODO">TODO</option>
 												<option value="IN_PROGRESS">IN_PROGRESS</option>
