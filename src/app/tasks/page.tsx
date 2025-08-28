@@ -115,6 +115,28 @@ export default function TasksPage() {
 	const AUTO_REFRESH_SECONDS = 120;
 	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
 	const [groupBy, setGroupBy] = useState<"none"|"category"|"customer"|"status"|"assignee">("none");
+	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+	function toggleSelect(id: string) {
+		setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+	}
+
+	function isSelected(id: string) {
+		return selectedIds.includes(id);
+	}
+
+	function clearSelection() {
+		setSelectedIds([]);
+	}
+
+	// selection helpers are recomputed later after listForRender
+	function toggleSelectAllOnPage() {
+		if (allSelectedOnPage) {
+			setSelectedIds(prev => prev.filter(id => !allVisibleIds.includes(id)));
+		} else {
+			setSelectedIds(prev => Array.from(new Set([...prev, ...allVisibleIds])));
+		}
+	}
 
 	// Get current user
 	useEffect(() => {
@@ -297,6 +319,10 @@ export default function TasksPage() {
 		});
 		return arr;
 	}, [filteredTasks, groupBy]);
+
+	// now that listForRender is known, recompute selection helpers
+	const allVisibleIds = React.useMemo(() => listForRender.map(t => t.id), [listForRender]);
+	const allSelectedOnPage = allVisibleIds.length > 0 && allVisibleIds.every(id => selectedIds.includes(id));
 
 	const grouped = React.useMemo(() => {
 		if (groupBy === "none") return [] as { key: string; items: Task[] }[];
@@ -1096,6 +1122,42 @@ export default function TasksPage() {
 				<div className="flex flex-wrap items-center justify-between gap-2 mb-2">
 					<h2 className="text-lg font-medium">Tasks</h2>
 					<div className="flex flex-wrap items-center gap-2">
+						<label className="flex items-center gap-2 text-sm mr-2">
+							<input type="checkbox" checked={allSelectedOnPage} onChange={toggleSelectAllOnPage} />
+							Select page
+						</label>
+						{selectedIds.length > 0 && (
+							<>
+								<button
+									type="button"
+									className="rounded border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200"
+									onClick={async () => {
+										if (!confirm(`Archive ${selectedIds.length} task${selectedIds.length !== 1 ? 's' : ''}?`)) return;
+										for (const id of selectedIds) {
+											await fetch(`/api/tasks/${id}`, { method: "PATCH", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ status: "ARCHIVED" }) });
+										}
+										clearSelection();
+										load();
+									}}
+								>
+									Bulk Archive ({selectedIds.length})
+								</button>
+								<button
+									type="button"
+									className="rounded border px-3 py-2 text-sm hover:bg-red-50 text-red-700 border-red-300"
+									onClick={async () => {
+										if (!confirm(`Delete ${selectedIds.length} task${selectedIds.length !== 1 ? 's' : ''}? This cannot be undone.`)) return;
+										for (const id of selectedIds) {
+											await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+										}
+										clearSelection();
+										load();
+									}}
+								>
+									Bulk Delete ({selectedIds.length})
+								</button>
+							</>
+						)}
 						<span className="text-xs text-gray-600">Auto refresh in {refreshIn}s</span>
 						<button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { setRefreshIn(AUTO_REFRESH_SECONDS); load(); }}>Refresh now</button>
 						<button
@@ -1195,6 +1257,10 @@ export default function TasksPage() {
 							const color = groupBy !== "none" ? getGroupColorClasses(gkey) : null;
 							return (
 						<li key={t.id} className={"border border-black rounded p-3 " + (groupBy !== "none" ? ("border-l-4 " + (color ? color.bar : "") + " " + (color ? color.bg : "")) : "") }>
+							<div className="flex items-center gap-2 mb-1">
+								<input type="checkbox" checked={isSelected(t.id)} onChange={() => toggleSelect(t.id)} />
+								<span className="text-[10px] w-5 h-5 inline-flex items-center justify-center rounded-full bg-black text-white">{index + 1}</span>
+							</div>
 							{groupBy !== "none" && (index === 0 || getGroupKey(listForRender[index-1]) !== gkey) && (
 								<div className="-mt-1 -mb-1 pb-2">
 							<div className="flex items-center justify-between">
