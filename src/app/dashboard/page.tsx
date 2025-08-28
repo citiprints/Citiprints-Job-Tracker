@@ -81,7 +81,7 @@ export default function DashboardPage() {
 	const [monthCursor, setMonthCursor] = useState(() => new Date());
 	const [viewingId, setViewingId] = useState<string | null>(null);
 	const [onlyMine, setOnlyMine] = useState(false);
-	const AUTO_REFRESH_SECONDS = 30;
+	const AUTO_REFRESH_SECONDS = 120;
 	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
 
 	// Get current user

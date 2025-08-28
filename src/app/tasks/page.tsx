@@ -112,7 +112,7 @@ export default function TasksPage() {
 	const [editSubtaskDueAt, setEditSubtaskDueAt] = useState<string>("");
 	const [editSubtaskEstimatedHours, setEditSubtaskEstimatedHours] = useState<number | null>(null);
 
-	const AUTO_REFRESH_SECONDS = 30;
+	const AUTO_REFRESH_SECONDS = 120;
 	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
 
 	// Get current user
@@ -1763,7 +1763,7 @@ export default function TasksPage() {
 									<div className="mt-2 flex gap-2">
 										<button
 											type="button"
-											className="rounded border px-3 py-2"
+											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
 											onClick={() => {
 												setEditingId(t.id);
 												setEditTitle(t.title);
@@ -1781,14 +1781,14 @@ export default function TasksPage() {
 										</button>
 										<button
 											type="button"
-											className="rounded border px-3 py-2"
+											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
 											onClick={() => setViewingId(t.id)}
 										>
 											View
 										</button>
 										<button
 											type="button"
-											className="rounded border px-3 py-2"
+											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
 											onClick={async () => {
 												if (!confirm("Delete this task?")) return;
 												await fetch(`/api/tasks/${t.id}`, { method: "DELETE" });
