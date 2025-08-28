@@ -186,26 +186,15 @@ export default function TasksPage() {
 		]);
 		if (resTasks.ok) {
 			const json = await resTasks.json();
-				const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
-					...t,
-					customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
-				}));
-				
-				// Load subtasks for each task
-				const tasksWithSubtasks = await Promise.all(
-					loaded.map(async (task) => {
-						const resSubtasks = await fetch(`/api/subtasks?taskId=${task.id}`);
-						if (resSubtasks.ok) {
-							const subtasksData = await resSubtasks.json();
-							return { ...task, subtasks: subtasksData.subtasks || [] };
-						}
-						return { ...task, subtasks: [] };
-					})
-				);
-				
-				// Filter out archived tasks from main list
-				const activeTasks = tasksWithSubtasks.filter(task => task.status !== "ARCHIVED");
-				setTasks(activeTasks);
+			const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
+				...t,
+				// server already includes subtasks
+				subtasks: t.subtasks ?? [],
+				customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
+			}));
+			// Filter out archived tasks from main list
+			const activeTasks = loaded.filter(task => task.status !== "ARCHIVED");
+			setTasks(activeTasks);
 		}
 		if (resFields.ok) {
 			const json = await resFields.json();
