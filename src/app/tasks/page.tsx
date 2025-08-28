@@ -1224,27 +1224,51 @@ export default function TasksPage() {
 												)}
 											</span>
 										</div>
-										<select
-											value={t.status}
-											onChange={async (e) => {
-												const newStatus = e.target.value as Task["status"];
-												await fetch(`/api/tasks/${t.id}`, {
-													method: "PATCH",
-													headers: { "Content-Type": "application/json" },
-													body: JSON.stringify({ status: newStatus })
-												});
-												load();
-											}}
-											className="text-xs px-2 py-1 rounded border bg-white"
-											style={{ color: "var(--foreground)" }}
-										>
-											<option value="TODO">TODO</option>
-											<option value="IN_PROGRESS">IN_PROGRESS</option>
-											<option value="BLOCKED">BLOCKED</option>
-											<option value="DONE">DONE</option>
-											<option value="CANCELLED">CANCELLED</option>
-											<option value="ARCHIVED">ARCHIVED</option>
-										</select>
+										<div className="flex gap-2">
+											<select
+												value={t.status}
+												onChange={async (e) => {
+													const newStatus = e.target.value as Task["status"];
+													await fetch(`/api/tasks/${t.id}`, {
+														method: "PATCH",
+														headers: { "Content-Type": "application/json" },
+														body: JSON.stringify({ status: newStatus })
+													});
+													load();
+												}}
+												className="text-xs px-2 py-1 rounded border bg-white"
+												style={{ color: "var(--foreground)" }}
+											>
+												<option value="TODO">TODO</option>
+												<option value="IN_PROGRESS">IN_PROGRESS</option>
+												<option value="BLOCKED">BLOCKED</option>
+												<option value="DONE">DONE</option>
+												<option value="CANCELLED">CANCELLED</option>
+												<option value="ARCHIVED">ARCHIVED</option>
+											</select>
+											<select
+												value={t.customFields?.paymentStatus || "NO_PAYMENT_RECEIVED"}
+												onChange={async (e) => {
+													const newPaymentStatus = e.target.value;
+													const updatedCustomFields = {
+														...t.customFields,
+														paymentStatus: newPaymentStatus
+													};
+													await fetch(`/api/tasks/${t.id}`, {
+														method: "PATCH",
+														headers: { "Content-Type": "application/json" },
+														body: JSON.stringify({ customFields: updatedCustomFields })
+													});
+													load();
+												}}
+												className="text-xs px-2 py-1 rounded border bg-white"
+												style={{ color: "var(--foreground)" }}
+											>
+												<option value="NO_PAYMENT_RECEIVED">No Payment</option>
+												<option value="ADVANCE_RECEIVED">Advance</option>
+												<option value="FULL_PAYMENT_RECEIVED">Full Payment</option>
+											</select>
+										</div>
 							</div>
 							{t.dueAt && <p className="text-xs text-gray-600 mt-1">Due: {new Date(t.dueAt).toLocaleString()}</p>}
 									<div className="mt-2 flex gap-2">
@@ -1727,4 +1751,3 @@ export default function TasksPage() {
 		</div>
 	);
 }
-// Force rebuild - Thu Aug 28 11:53:13 IST 2025
