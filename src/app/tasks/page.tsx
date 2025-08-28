@@ -6,7 +6,7 @@ type Task = {
 	id: string;
 	title: string;
 	description: string;
-	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED";
+	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED" | "CLIENT_TO_REVERT";
 	priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 	startAt?: string | null;
 	dueAt: string | null;
@@ -605,6 +605,7 @@ export default function TasksPage() {
 						<option>Paper Bags</option>
 						<option>Stickers</option>
 						<option>Cards</option>
+						<option>Others</option>
 					</select>
 					
 					{/* Quantity field */}
@@ -717,6 +718,207 @@ export default function TasksPage() {
 									/>
 								)}
 							</div>
+						</div>
+					)}
+
+					{custom["category"] === "Cake Boxes" && (
+						<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+							<h3 className="font-medium text-sm">Cake Box Specifications</h3>
+							<div>
+								<label className="block text-sm font-medium mb-2">Size</label>
+								<div className="flex items-center gap-2">
+									<input
+										type="text"
+										className="flex-1 border rounded px-3 py-2"
+										placeholder="Enter size"
+										value={custom["size"] ?? ""}
+										onChange={e => setCustom({ ...custom, size: e.target.value })}
+									/>
+									<label className="flex items-center gap-2 text-sm">
+										<input
+											type="checkbox"
+											checked={custom["existingSize"] ?? false}
+											onChange={e => setCustom({ ...custom, existingSize: e.target.checked })}
+										/>
+										Existing size
+									</label>
+								</div>
+							</div>
+							<div>
+								<label className="flex items-center gap-2">
+									<input
+										type="checkbox"
+										checked={custom["hasWindow"] ?? false}
+										onChange={e => setCustom({ ...custom, hasWindow: e.target.checked })}
+									/>
+									Window
+								</label>
+								{custom["hasWindow"] && (
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2 mt-2"
+										placeholder="Window details"
+										value={custom["windowDetails"] ?? ""}
+										onChange={e => setCustom({ ...custom, windowDetails: e.target.value })}
+									/>
+								)}
+							</div>
+							<div>
+								<label className="flex items-center gap-2">
+									<input
+										type="checkbox"
+										checked={custom["innerPrinting"] ?? false}
+										onChange={e => setCustom({ ...custom, innerPrinting: e.target.checked })}
+									/>
+									Inner Printing
+								</label>
+								{custom["innerPrinting"] && (
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2 mt-2"
+										placeholder="Inner printing details"
+										value={custom["innerPrintingDetails"] ?? ""}
+										onChange={e => setCustom({ ...custom, innerPrintingDetails: e.target.value })}
+									/>
+								)}
+							</div>
+						</div>
+					)}
+
+					{custom["category"] === "Paper Bags" && (
+						<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+							<h3 className="font-medium text-sm">Paper Bag Specifications</h3>
+							<div>
+								<label className="block text-sm font-medium mb-2">Size</label>
+								<div className="flex items-center gap-2">
+									<input
+										type="text"
+										className="flex-1 border rounded px-3 py-2"
+										placeholder="Enter size"
+										value={custom["size"] ?? ""}
+										onChange={e => setCustom({ ...custom, size: e.target.value })}
+									/>
+									<label className="flex items-center gap-2 text-sm">
+										<input
+											type="checkbox"
+											checked={custom["existingSize"] ?? false}
+											onChange={e => setCustom({ ...custom, existingSize: e.target.checked })}
+										/>
+										Existing size
+									</label>
+								</div>
+							</div>
+							<div>
+								<label className="flex items-center gap-2">
+									<input
+										type="checkbox"
+										checked={custom["innerPrinting"] ?? false}
+										onChange={e => setCustom({ ...custom, innerPrinting: e.target.checked })}
+									/>
+									Inner Printing
+								</label>
+								{custom["innerPrinting"] && (
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2 mt-2"
+										placeholder="Inner printing details"
+										value={custom["innerPrintingDetails"] ?? ""}
+										onChange={e => setCustom({ ...custom, innerPrintingDetails: e.target.value })}
+									/>
+								)}
+							</div>
+							<input
+								type="text"
+								className="w-full border rounded px-3 py-2"
+								placeholder="Rope details"
+								value={custom["rope"] ?? ""}
+								onChange={e => setCustom({ ...custom, rope: e.target.value })}
+							/>
+						</div>
+					)}
+
+					{custom["category"] === "Stickers" && (
+						<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+							<h3 className="font-medium text-sm">Sticker Specifications</h3>
+							<input
+								type="text"
+								className="w-full border rounded px-3 py-2"
+								placeholder="Size"
+								value={custom["size"] ?? ""}
+								onChange={e => setCustom({ ...custom, size: e.target.value })}
+							/>
+							<div className="grid grid-cols-2 gap-3">
+								<div>
+									<label className="block text-sm font-medium mb-1">Shape</label>
+									<select
+										className="w-full border rounded px-3 py-2"
+										value={custom["shape"] ?? "Rectangle"}
+										onChange={e => setCustom({ ...custom, shape: e.target.value })}
+									>
+										<option>Rectangle</option>
+										<option>Circle</option>
+										<option>Custom</option>
+									</select>
+								</div>
+								<div>
+									<label className="block text-sm font-medium mb-1">Material</label>
+									<select
+										className="w-full border rounded px-3 py-2"
+										value={custom["material"] ?? "Artsticker"}
+										onChange={e => setCustom({ ...custom, material: e.target.value })}
+									>
+										<option>Artsticker</option>
+										<option>Transparent</option>
+										<option>Chrome</option>
+										<option>Synthetic</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					)}
+
+					{custom["category"] === "Cards" && (
+						<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+							<h3 className="font-medium text-sm">Card Specifications</h3>
+							<input
+								type="text"
+								className="w-full border rounded px-3 py-2"
+								placeholder="Size"
+								value={custom["size"] ?? ""}
+								onChange={e => setCustom({ ...custom, size: e.target.value })}
+							/>
+							<div>
+								<label className="block text-sm font-medium mb-1">Sides</label>
+								<div className="flex items-center gap-4">
+									<label className="flex items-center gap-2 text-sm">
+										<input
+											type="radio"
+											name="cardSides"
+											value="single"
+											checked={(custom["sides"] ?? "single") === "single"}
+											onChange={() => setCustom({ ...custom, sides: "single" })}
+										/>
+										Single side
+									</label>
+									<label className="flex items-center gap-2 text-sm">
+										<input
+											type="radio"
+											name="cardSides"
+											value="double"
+											checked={custom["sides"] === "double"}
+											onChange={() => setCustom({ ...custom, sides: "double" })}
+										/>
+										Double side
+									</label>
+								</div>
+							</div>
+							<input
+								type="text"
+								className="w-full border rounded px-3 py-2"
+								placeholder="Material"
+								value={custom["material"] ?? ""}
+								onChange={e => setCustom({ ...custom, material: e.target.value })}
+							/>
 						</div>
 					)}
 
@@ -841,6 +1043,7 @@ export default function TasksPage() {
 							<option value="Paper Bags">Paper Bags</option>
 							<option value="Stickers">Stickers</option>
 							<option value="Cards">Cards</option>
+							<option value="Others">Others</option>
 						</select>
 					</div>
 					<div className="text-sm text-gray-600">
@@ -923,6 +1126,7 @@ export default function TasksPage() {
 												<option value="DONE">DONE</option>
 												<option value="CANCELLED">CANCELLED</option>
 												<option value="ARCHIVED">ARCHIVED</option>
+												<option value="CLIENT_TO_REVERT">CLIENT_TO_REVERT</option>
 											</select>
 											</div>
 										</div>
@@ -1038,6 +1242,7 @@ export default function TasksPage() {
 												<option value="Paper Bags">Paper Bags</option>
 												<option value="Stickers">Stickers</option>
 												<option value="Cards">Cards</option>
+												<option value="Others">Others</option>
 											</select>
 										</div>
 										<div>
@@ -1117,6 +1322,207 @@ export default function TasksPage() {
 													/>
 												)}
 											</div>
+										</div>
+									)}
+
+									{custom["category"] === "Cake Boxes" && (
+										<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+											<h3 className="font-medium text-sm">Cake Box Specifications</h3>
+											<div>
+												<label className="block text-sm font-medium mb-2">Size</label>
+												<div className="flex items-center gap-2">
+													<input
+														type="text"
+														className="flex-1 border rounded px-3 py-2"
+														placeholder="Enter size"
+														value={custom["size"] ?? ""}
+														onChange={e => setCustom({ ...custom, size: e.target.value })}
+													/>
+													<label className="flex items-center gap-2 text-sm">
+														<input
+															type="checkbox"
+															checked={custom["existingSize"] ?? false}
+															onChange={e => setCustom({ ...custom, existingSize: e.target.checked })}
+														/>
+														Existing size
+													</label>
+												</div>
+											</div>
+											<div>
+												<label className="flex items-center gap-2">
+													<input
+														type="checkbox"
+														checked={custom["hasWindow"] ?? false}
+														onChange={e => setCustom({ ...custom, hasWindow: e.target.checked })}
+													/>
+													Window
+												</label>
+												{custom["hasWindow"] && (
+													<input
+														type="text"
+														className="w-full border rounded px-3 py-2 mt-2"
+														placeholder="Window details"
+														value={custom["windowDetails"] ?? ""}
+														onChange={e => setCustom({ ...custom, windowDetails: e.target.value })}
+													/>
+												)}
+											</div>
+											<div>
+												<label className="flex items-center gap-2">
+													<input
+														type="checkbox"
+														checked={custom["innerPrinting"] ?? false}
+														onChange={e => setCustom({ ...custom, innerPrinting: e.target.checked })}
+													/>
+													Inner Printing
+												</label>
+												{custom["innerPrinting"] && (
+													<input
+														type="text"
+														className="w-full border rounded px-3 py-2 mt-2"
+														placeholder="Inner printing details"
+														value={custom["innerPrintingDetails"] ?? ""}
+														onChange={e => setCustom({ ...custom, innerPrintingDetails: e.target.value })}
+													/>
+												)}
+											</div>
+										</div>
+									)}
+
+									{custom["category"] === "Paper Bags" && (
+										<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+											<h3 className="font-medium text-sm">Paper Bag Specifications</h3>
+											<div>
+												<label className="block text-sm font-medium mb-2">Size</label>
+												<div className="flex items-center gap-2">
+													<input
+														type="text"
+														className="flex-1 border rounded px-3 py-2"
+														placeholder="Enter size"
+														value={custom["size"] ?? ""}
+														onChange={e => setCustom({ ...custom, size: e.target.value })}
+													/>
+													<label className="flex items-center gap-2 text-sm">
+														<input
+															type="checkbox"
+															checked={custom["existingSize"] ?? false}
+															onChange={e => setCustom({ ...custom, existingSize: e.target.checked })}
+														/>
+														Existing size
+													</label>
+												</div>
+											</div>
+											<div>
+												<label className="flex items-center gap-2">
+													<input
+														type="checkbox"
+														checked={custom["innerPrinting"] ?? false}
+														onChange={e => setCustom({ ...custom, innerPrinting: e.target.checked })}
+													/>
+													Inner Printing
+												</label>
+												{custom["innerPrinting"] && (
+													<input
+														type="text"
+														className="w-full border rounded px-3 py-2 mt-2"
+														placeholder="Inner printing details"
+														value={custom["innerPrintingDetails"] ?? ""}
+														onChange={e => setCustom({ ...custom, innerPrintingDetails: e.target.value })}
+													/>
+												)}
+											</div>
+											<input
+												type="text"
+												className="w-full border rounded px-3 py-2"
+												placeholder="Rope details"
+												value={custom["rope"] ?? ""}
+												onChange={e => setCustom({ ...custom, rope: e.target.value })}
+											/>
+										</div>
+									)}
+
+									{custom["category"] === "Stickers" && (
+										<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+											<h3 className="font-medium text-sm">Sticker Specifications</h3>
+											<input
+												type="text"
+												className="w-full border rounded px-3 py-2"
+												placeholder="Size"
+												value={custom["size"] ?? ""}
+												onChange={e => setCustom({ ...custom, size: e.target.value })}
+											/>
+											<div className="grid grid-cols-2 gap-3">
+												<div>
+													<label className="block text-sm font-medium mb-1">Shape</label>
+													<select
+														className="w-full border rounded px-3 py-2"
+														value={custom["shape"] ?? "Rectangle"}
+														onChange={e => setCustom({ ...custom, shape: e.target.value })}
+													>
+														<option>Rectangle</option>
+														<option>Circle</option>
+														<option>Custom</option>
+													</select>
+												</div>
+												<div>
+													<label className="block text-sm font-medium mb-1">Material</label>
+													<select
+														className="w-full border rounded px-3 py-2"
+														value={custom["material"] ?? "Artsticker"}
+														onChange={e => setCustom({ ...custom, material: e.target.value })}
+													>
+														<option>Artsticker</option>
+														<option>Transparent</option>
+														<option>Chrome</option>
+														<option>Synthetic</option>
+													</select>
+												</div>
+											</div>
+										</div>
+									)}
+
+									{custom["category"] === "Cards" && (
+										<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+											<h3 className="font-medium text-sm">Card Specifications</h3>
+											<input
+												type="text"
+												className="w-full border rounded px-3 py-2"
+												placeholder="Size"
+												value={custom["size"] ?? ""}
+												onChange={e => setCustom({ ...custom, size: e.target.value })}
+											/>
+											<div>
+												<label className="block text-sm font-medium mb-1">Sides</label>
+												<div className="flex items-center gap-4">
+													<label className="flex items-center gap-2 text-sm">
+														<input
+															type="radio"
+															name="cardSides"
+															value="single"
+															checked={(custom["sides"] ?? "single") === "single"}
+															onChange={() => setCustom({ ...custom, sides: "single" })}
+														/>
+														Single side
+													</label>
+													<label className="flex items-center gap-2 text-sm">
+														<input
+															type="radio"
+															name="cardSides"
+															value="double"
+															checked={custom["sides"] === "double"}
+															onChange={() => setCustom({ ...custom, sides: "double" })}
+														/>
+														Double side
+													</label>
+												</div>
+											</div>
+											<input
+												type="text"
+												className="w-full border rounded px-3 py-2"
+												placeholder="Material"
+												value={custom["material"] ?? ""}
+												onChange={e => setCustom({ ...custom, material: e.target.value })}
+											/>
 										</div>
 									)}
 
@@ -1245,6 +1651,7 @@ export default function TasksPage() {
 												<option value="DONE">DONE</option>
 												<option value="CANCELLED">CANCELLED</option>
 												<option value="ARCHIVED">ARCHIVED</option>
+												<option value="CLIENT_TO_REVERT">CLIENT_TO_REVERT</option>
 											</select>
 											<select
 												value={t.customFields?.paymentStatus || "NO_PAYMENT_RECEIVED"}

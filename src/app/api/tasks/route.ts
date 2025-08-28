@@ -6,7 +6,7 @@ import { z } from "zod";
 const CreateTaskSchema = z.object({
 	title: z.string().min(1),
 	description: z.string().optional(),
-	status: z.enum(["TODO","IN_PROGRESS","BLOCKED","DONE","CANCELLED","ARCHIVED"]).optional(),
+	status: z.enum(["TODO","IN_PROGRESS","BLOCKED","DONE","CANCELLED","ARCHIVED","CLIENT_TO_REVERT"]).optional(),
 	priority: z.enum(["LOW","MEDIUM","HIGH","URGENT"]).optional(),
 	startAt: z.string().optional(),
 	dueAt: z.string().optional(),
