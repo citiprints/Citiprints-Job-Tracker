@@ -301,6 +301,15 @@ export default function TasksPage() {
 			{ bar: "border-rose-500", bg: "bg-rose-50", dot: "bg-rose-500" },
 			{ bar: "border-cyan-500", bg: "bg-cyan-50", dot: "bg-cyan-500" },
 			{ bar: "border-lime-500", bg: "bg-lime-50", dot: "bg-lime-500" },
+			{ bar: "border-sky-500", bg: "bg-sky-50", dot: "bg-sky-500" },
+			{ bar: "border-violet-500", bg: "bg-violet-50", dot: "bg-violet-500" },
+			{ bar: "border-fuchsia-500", bg: "bg-fuchsia-50", dot: "bg-fuchsia-500" },
+			{ bar: "border-emerald-500", bg: "bg-emerald-50", dot: "bg-emerald-500" },
+			{ bar: "border-orange-500", bg: "bg-orange-50", dot: "bg-orange-500" },
+			{ bar: "border-yellow-500", bg: "bg-yellow-50", dot: "bg-yellow-500" },
+			{ bar: "border-stone-500", bg: "bg-stone-50", dot: "bg-stone-500" },
+			{ bar: "border-slate-500", bg: "bg-slate-50", dot: "bg-slate-500" },
+			{ bar: "border-zinc-500", bg: "bg-zinc-50", dot: "bg-zinc-500" },
 		];
 		let hash = 0;
 		for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
@@ -1184,9 +1193,37 @@ export default function TasksPage() {
 						</form>
 					</div>
 				</div>
+				<div className="flex flex-wrap items-center gap-2 mb-3">
+					<button
+						onClick={async () => {
+							const completedTasks = filteredTasks.filter(t => t.status === "DONE");
+							if (completedTasks.length === 0) {
+								alert("No completed tasks to archive.");
+								return;
+							}
+							if (confirm(`Archive ${completedTasks.length} completed task${completedTasks.length !== 1 ? 's' : ''}?`)) {
+								for (const task of completedTasks) {
+									await fetch(`/api/tasks/${task.id}`, {
+										method: "PATCH",
+										headers: { "Content-Type": "application/json" },
+										body: JSON.stringify({ status: "ARCHIVED" })
+									});
+								}
+								load();
+							}
+						}}
+						className="rounded border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200"
+					>
+						Archive Completed ({filteredTasks.filter(t => t.status === "DONE").length})
+					</button>
+					<a className="rounded border px-3 py-2 text-sm" href="/api/export/tasks-csv">Export CSV</a>
+					<form action="/api/export/tasks-sheets" method="post" className="inline">
+						<button className="rounded border px-3 py-2 text-sm" type="submit">Export to Google Sheets</button>
+					</form>
+				</div>
 				
-				{/* Category Filter */}
-				<div className="mb-4 flex items-center justify-between">
+				{/* Filters row */}
+				<div className="mb-4 flex items-end justify-between gap-4">
 					<div className="flex flex-wrap items-end gap-4">
 						<div>
 							<label className="block text-sm font-medium mb-2">Filter by Category:</label>
