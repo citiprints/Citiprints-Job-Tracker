@@ -1165,32 +1165,7 @@ export default function TasksPage() {
 						)}
 						<span className="text-xs text-gray-600">Auto refresh in {refreshIn}s</span>
 						<button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { setRefreshIn(AUTO_REFRESH_SECONDS); load(); }}>Refresh now</button>
-						<button
-							onClick={async () => {
-								const completedTasks = filteredTasks.filter(t => t.status === "DONE");
-								if (completedTasks.length === 0) {
-									alert("No completed tasks to archive.");
-									return;
-								}
-								if (confirm(`Archive ${completedTasks.length} completed task${completedTasks.length !== 1 ? 's' : ''}?`)) {
-									for (const task of completedTasks) {
-										await fetch(`/api/tasks/${task.id}`, {
-											method: "PATCH",
-											headers: { "Content-Type": "application/json" },
-											body: JSON.stringify({ status: "ARCHIVED" })
-										});
-									}
-									load();
-								}
-							}}
-							className="rounded border px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200"
-						>
-							Archive Completed ({filteredTasks.filter(t => t.status === "DONE").length})
-						</button>
-						<a className="rounded border px-3 py-2 text-sm" href="/api/export/tasks-csv">Export CSV</a>
-						<form action="/api/export/tasks-sheets" method="post" className="inline">
-							<button className="rounded border px-3 py-2 text-sm" type="submit">Export to Google Sheets</button>
-						</form>
+
 					</div>
 				</div>
 				<div className="flex flex-wrap items-center gap-2 mb-3">
