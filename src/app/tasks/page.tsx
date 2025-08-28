@@ -8,7 +8,6 @@ type Task = {
 	description: string;
 	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED";
 	priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-	paymentStatus?: "No payment Received" | "Advance Received" | "Full Payment Received" | null;
 	startAt?: string | null;
 	dueAt: string | null;
 	createdAt: string;
@@ -80,7 +79,6 @@ export default function TasksPage() {
 	const [editTitle, setEditTitle] = useState("");
 	const [editDesc, setEditDesc] = useState("");
 	const [editStatus, setEditStatus] = useState<Task["status"]>("TODO");
-	const [editPaymentStatus, setEditPaymentStatus] = useState<Task["paymentStatus"]>("No payment Received");
 	const [editStart, setEditStart] = useState<string>("");
 	const [editDue, setEditDue] = useState<string>("");
 	const [submitting, setSubmitting] = useState(false);
@@ -891,7 +889,6 @@ export default function TasksPage() {
 													title: editTitle,
 													description: editDesc,
 													status: editStatus,
-													paymentStatus: editPaymentStatus,
 													startAt: editStart ? new Date(editStart).toISOString() : null,
 													dueAt: editDue ? new Date(editDue).toISOString() : null,
 													customerId: customerId || null,
@@ -928,18 +925,6 @@ export default function TasksPage() {
 												<option value="ARCHIVED">ARCHIVED</option>
 											</select>
 											</div>
-										</div>
-										
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<label className="block text-sm font-medium mb-1">Payment Status</label>
-												<select className="w-full border rounded px-3 py-2" value={editPaymentStatus || "No payment Received"} onChange={e => setEditPaymentStatus(e.target.value as Task["paymentStatus"])}>
-													<option value="No payment Received">No payment Received</option>
-													<option value="Advance Received">Advance Received</option>
-													<option value="Full Payment Received">Full Payment Received</option>
-												</select>
-											</div>
-											<div></div>
 										</div>
 
 										<div>
@@ -1237,15 +1222,6 @@ export default function TasksPage() {
 												{isAssignedToMe(t) && (
 													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>Assigned to me</span>
 												)}
-												{t.paymentStatus && (
-													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ 
-														background: t.paymentStatus === "Full Payment Received" ? "#10b981" : 
-																	t.paymentStatus === "Advance Received" ? "#f59e0b" : "#ef4444",
-														color: "white"
-													}}>
-														{t.paymentStatus}
-													</span>
-												)}
 											</span>
 										</div>
 										<select
@@ -1280,7 +1256,6 @@ export default function TasksPage() {
 												setEditTitle(t.title);
 												setEditDesc(t.description);
 												setEditStatus(t.status);
-												setEditPaymentStatus(t.paymentStatus || "No payment Received");
 												setEditStart(t.startAt ? new Date(t.startAt).toISOString().slice(0,16) : "");
 												setEditDue(t.dueAt ? new Date(t.dueAt).toISOString().slice(0,16) : "");
 												setCustomerId(t.customerId || "");

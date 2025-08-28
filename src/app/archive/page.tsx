@@ -7,7 +7,6 @@ type Task = {
 	description: string;
 	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED";
 	priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-	paymentStatus?: "No payment Received" | "Advance Received" | "Full Payment Received" | null;
 	startAt?: string | null;
 	dueAt: string | null;
 	createdAt: string;
@@ -188,15 +187,6 @@ export default function ArchivePage() {
 									{isAssignedToMe(task) && (
 										<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Assigned to me</span>
 									)}
-									{task.paymentStatus && (
-										<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ 
-											background: task.paymentStatus === "Full Payment Received" ? "#10b981" : 
-														task.paymentStatus === "Advance Received" ? "#f59e0b" : "#ef4444",
-											color: "white"
-										}}>
-											{task.paymentStatus}
-										</span>
-									)}
 								</div>
 								<div className="flex items-center gap-2">
 									<span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-600 text-white">ARCHIVED</span>
@@ -268,15 +258,6 @@ export default function ArchivePage() {
 											<label className="block text-sm font-medium text-gray-700">Status</label>
 											<span className="inline-block px-2 py-1 text-xs rounded bg-gray-600 text-white">
 												{task.status}
-											</span>
-										</div>
-										<div>
-											<label className="block text-sm font-medium text-gray-700">Payment Status</label>
-											<span className="inline-block px-2 py-1 text-xs rounded text-white" style={{ 
-												background: task.paymentStatus === "Full Payment Received" ? "#10b981" : 
-															task.paymentStatus === "Advance Received" ? "#f59e0b" : "#ef4444"
-											}}>
-												{task.paymentStatus || "No payment Received"}
 											</span>
 										</div>
 										<div>
