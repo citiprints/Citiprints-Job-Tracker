@@ -267,6 +267,25 @@ export default function TasksPage() {
 		}
 	}
 
+	function getGroupColorClasses(key: string): { bar: string; bg: string; dot: string } {
+		const palette = [
+			{ bar: "border-blue-500", bg: "bg-blue-50", dot: "bg-blue-500" },
+			{ bar: "border-green-500", bg: "bg-green-50", dot: "bg-green-500" },
+			{ bar: "border-amber-500", bg: "bg-amber-50", dot: "bg-amber-500" },
+			{ bar: "border-purple-500", bg: "bg-purple-50", dot: "bg-purple-500" },
+			{ bar: "border-pink-500", bg: "bg-pink-50", dot: "bg-pink-500" },
+			{ bar: "border-teal-500", bg: "bg-teal-50", dot: "bg-teal-500" },
+			{ bar: "border-indigo-500", bg: "bg-indigo-50", dot: "bg-indigo-500" },
+			{ bar: "border-rose-500", bg: "bg-rose-50", dot: "bg-rose-500" },
+			{ bar: "border-cyan-500", bg: "bg-cyan-50", dot: "bg-cyan-500" },
+			{ bar: "border-lime-500", bg: "bg-lime-50", dot: "bg-lime-500" },
+		];
+		let hash = 0;
+		for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+		const idx = hash % palette.length;
+		return palette[idx];
+	}
+
 	const listForRender = React.useMemo(() => {
 		if (groupBy === "none") return filteredTasks;
 		const arr = [...filteredTasks];
@@ -278,6 +297,25 @@ export default function TasksPage() {
 		});
 		return arr;
 	}, [filteredTasks, groupBy]);
+
+	const grouped = React.useMemo(() => {
+		if (groupBy === "none") return [] as { key: string; items: Task[] }[];
+		const groups: { key: string; items: Task[] }[] = [];
+		let currentKey = "";
+		let bucket: Task[] = [];
+		for (const t of listForRender) {
+			const k = getGroupKey(t);
+			if (k !== currentKey) {
+				if (bucket.length) groups.push({ key: currentKey, items: bucket });
+				currentKey = k;
+				bucket = [t];
+			} else {
+				bucket.push(t);
+			}
+		}
+		if (bucket.length) groups.push({ key: currentKey, items: bucket });
+		return groups;
+	}, [listForRender, groupBy]);
 
 	// Subtask functions
 	async function createSubtask(taskId: string) {
@@ -1152,12 +1190,18 @@ export default function TasksPage() {
 					<p className="text-center text-gray-500">No tasks yet. Create one!</p>
 				) : (
 				<ul className="space-y-2">
-						{listForRender.map((t, index) => (
-						<li key={t.id} className="border border-black rounded p-3">
-							{groupBy !== "none" && (index === 0 || getGroupKey(listForRender[index-1]) !== getGroupKey(t)) && (
+						{listForRender.map((t, index) => {
+							const gkey = getGroupKey(t);
+							const color = groupBy !== "none" ? getGroupColorClasses(gkey) : null;
+							return (
+						<li key={t.id} className={"border border-black rounded p-3 " + (groupBy !== "none" ? ("border-l-4 " + (color ? color.bar : "") + " " + (color ? color.bg : "")) : "") }>
+							{groupBy !== "none" && (index === 0 || getGroupKey(listForRender[index-1]) !== gkey) && (
 								<div className="-mt-1 -mb-1 pb-2">
-									<div className="flex items-center justify-between">
-										<h3 className="text-sm font-medium">{getGroupKey(t)}</h3>
+							<div className="flex items-center justify-between">
+										<h3 className="text-sm font-medium flex items-center gap-2">
+											<span className={`inline-block w-2.5 h-2.5 rounded-full ${color?.dot || ""}`}></span>
+											{gkey}
+										</h3>
 										<span className="text-xs text-gray-500">Group</span>
 									</div>
 									<div className="border-t border-gray-200 mt-1"></div>
@@ -2083,7 +2127,8 @@ export default function TasksPage() {
 								</div>
 							)}
 						</li>
-					))}
+						);
+					})}
 				</ul>
 				)}
 			</section>
