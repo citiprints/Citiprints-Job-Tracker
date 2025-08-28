@@ -39,10 +39,13 @@ function extractKeyFromUrl(url: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
-	// Auth: allow either admin user or valid cron secret header
+	// Auth: allow either admin user, valid cron secret header, or Vercel Cron invocations
 	const secretHeader = request.headers.get("x-cron-secret");
+	const vercelCronHeader = request.headers.get("x-vercel-cron");
 	let isAuthorized = false;
-	if (CRON_SECRET && secretHeader && secretHeader === CRON_SECRET) {
+	if (vercelCronHeader) {
+		isAuthorized = true;
+	} else if (CRON_SECRET && secretHeader && secretHeader === CRON_SECRET) {
 		isAuthorized = true;
 	} else {
 		const user = await getCurrentUser();
