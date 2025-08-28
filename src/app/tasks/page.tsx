@@ -1642,21 +1642,6 @@ export default function TasksPage() {
 											<span className="text-[10px] w-5 h-5 inline-flex items-center justify-center rounded-full bg-black text-white">{index + 1}</span>
 											<span className="font-medium flex items-center gap-2">
 												{t.title}
-												{t.customFields?.quantity && (
-													<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Qty: {t.customFields.quantity}</span>
-												)}
-												{t.customerRef?.name && (
-													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{t.customerRef.name}</span>
-												)}
-												{t.customFields?.category && (
-													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{t.customFields.category}</span>
-												)}
-												{t.assignments && t.assignments.map(a => (
-													<span key={a.id} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{a.user.name}</span>
-												))}
-												{isAssignedToMe(t) && (
-													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>Assigned to me</span>
-												)}
 											</span>
 										</div>
 										<div className="flex gap-2">
@@ -1705,6 +1690,24 @@ export default function TasksPage() {
 												<option value="FULL_PAYMENT_RECEIVED">Full Payment</option>
 											</select>
 										</div>
+							</div>
+							{/* Badges row below title */}
+							<div className="mt-1 flex flex-wrap items-center gap-1">
+								{t.customFields?.quantity && (
+									<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Qty: {t.customFields.quantity}</span>
+								)}
+								{t.customerRef?.name && (
+									<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{t.customerRef.name}</span>
+								)}
+								{t.customFields?.category && (
+									<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{t.customFields.category}</span>
+								)}
+								{t.assignments && t.assignments.map(a => (
+									<span key={a.id} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{a.user.name}</span>
+								))}
+								{isAssignedToMe(t) && (
+									<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>Assigned to me</span>
+								)}
 							</div>
 							{t.dueAt && <p className="text-xs text-gray-600 mt-1">Due: {new Date(t.dueAt).toLocaleString()}</p>}
 									<div className="mt-2 flex gap-2">
