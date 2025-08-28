@@ -103,23 +103,12 @@ export default function DashboardPage() {
 				const json = await res.json();
 					const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
 						...t,
+						// use subtasks already included by API
+						subtasks: t.subtasks ?? [],
 						customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
 					}));
-					
-					// Load subtasks for each task
-					const tasksWithSubtasks = await Promise.all(
-						loaded.map(async (task) => {
-							const resSubtasks = await fetch(`/api/subtasks?taskId=${task.id}`);
-							if (resSubtasks.ok) {
-								const subtasksData = await resSubtasks.json();
-								return { ...task, subtasks: subtasksData.subtasks || [] };
-							}
-							return { ...task, subtasks: [] };
-						})
-					);
-					
 					// Filter out archived tasks from dashboard
-				const activeTasks = tasksWithSubtasks.filter(task => task.status !== "ARCHIVED");
+				const activeTasks = loaded.filter(task => task.status !== "ARCHIVED");
 				setTasks(activeTasks);
 				}
 			} catch (error) {
@@ -256,18 +245,6 @@ export default function DashboardPage() {
 												<div className="flex items-center gap-2">
 													<span className="text-[10px] w-5 h-5 inline-flex items-center justify-center rounded-full bg-black text-white">{index + 1}</span>
 													<button type="button" className="font-medium hover:underline" onClick={() => setViewingId(task.id)}>{task.title}</button>
-													{task.customFields?.quantity && (
-														<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Qty: {task.customFields.quantity}</span>
-													)}
-													{task.customerRef?.name && (
-														<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.customerRef.name}</span>
-													)}
-													{task.customFields?.category && (
-														<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.customFields.category}</span>
-													)}
-													{isAssignedToMe(task) && (
-														<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Assigned to me</span>
-													)}
 												</div>
 												<div className="flex flex-col items-end gap-1">
 													<span className={`text-sm ${daysLeft < 0 ? 'text-red-600' : daysLeft <= 3 ? 'text-orange-600' : 'text-gray-600'}`}>
@@ -276,7 +253,26 @@ export default function DashboardPage() {
 													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.status}</span>
 												</div>
 											</div>
-											
+
+											{/* Badges row below title */}
+											<div className="mt-1 flex flex-wrap items-center gap-1">
+												{task.customFields?.quantity && (
+													<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Qty: {task.customFields.quantity}</span>
+												)}
+												{task.customerRef?.name && (
+													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.customerRef.name}</span>
+												)}
+												{task.customFields?.category && (
+													<span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{task.customFields.category}</span>
+												)}
+												{task.assignments && task.assignments.map(a => (
+													<span key={a.id} className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{a.user.name}</span>
+												))}
+												{isAssignedToMe(task) && (
+													<span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">Assigned to me</span>
+												)}
+											</div>
+ 
 											{/* Subtasks */}
 											{taskSubtasks.length > 0 && (
 												<div className="mt-2 pt-2 border-t border-gray-200 ml-6 space-y-1">
@@ -304,7 +300,7 @@ export default function DashboardPage() {
 													})}
 												</div>
 											)}
-											
+ 
 										</div>
 									);
 								})}
