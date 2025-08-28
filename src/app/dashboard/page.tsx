@@ -81,6 +81,8 @@ export default function DashboardPage() {
 	const [monthCursor, setMonthCursor] = useState(() => new Date());
 	const [viewingId, setViewingId] = useState<string | null>(null);
 	const [onlyMine, setOnlyMine] = useState(false);
+	const AUTO_REFRESH_SECONDS = 30;
+	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
 
 	// Get current user
 	useEffect(() => {
@@ -118,6 +120,23 @@ export default function DashboardPage() {
 			}
 		}
 		load();
+	}, []);
+
+	// Auto refresh with countdown
+	useEffect(() => {
+		const id = setInterval(() => {
+			setRefreshIn(prev => {
+				if (prev <= 1) {
+					// trigger reload
+					(async () => {
+						try { const res = await fetch("/api/tasks"); if (res.ok) { const json = await res.json(); const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({ ...t, subtasks: t.subtasks ?? [], customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {}) })); const active = loaded.filter(task => task.status !== "ARCHIVED"); setTasks(active); } } catch {}
+					})();
+					return AUTO_REFRESH_SECONDS;
+				}
+				return prev - 1;
+			});
+		}, 1000);
+		return () => clearInterval(id);
 	}, []);
 
 	// Helper function to check if task is assigned to current user
@@ -201,6 +220,8 @@ export default function DashboardPage() {
 				<div className="flex flex-wrap items-center justify-between gap-2 mb-4">
 					<h2 className="text-lg font-medium">Upcoming Deadlines</h2>
 					<div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+						<span className="text-xs text-gray-600">Auto refresh in {refreshIn}s</span>
+						<button type="button" className="px-3 py-1 rounded border" onClick={() => { setRefreshIn(AUTO_REFRESH_SECONDS); (async () => { try { const res = await fetch("/api/tasks"); if (res.ok) { const json = await res.json(); const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({ ...t, subtasks: t.subtasks ?? [], customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {}) })); const active = loaded.filter(task => task.status !== "ARCHIVED"); setTasks(active); } } catch {} })(); }}>Refresh now</button>
 						<button
 							type="button"
 							className={`px-3 py-1 rounded border ${viewMode === "list" ? "bg-black text-white" : "bg-white"}`}

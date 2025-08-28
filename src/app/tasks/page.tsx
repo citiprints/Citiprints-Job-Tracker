@@ -112,6 +112,9 @@ export default function TasksPage() {
 	const [editSubtaskDueAt, setEditSubtaskDueAt] = useState<string>("");
 	const [editSubtaskEstimatedHours, setEditSubtaskEstimatedHours] = useState<number | null>(null);
 
+	const AUTO_REFRESH_SECONDS = 30;
+	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
+
 	// Get current user
 	useEffect(() => {
 		async function getCurrentUser() {
@@ -217,6 +220,20 @@ export default function TasksPage() {
 
 	useEffect(() => {
 		load();
+	}, []);
+
+	// Auto refresh with countdown
+	useEffect(() => {
+		const id = setInterval(() => {
+			setRefreshIn(prev => {
+				if (prev <= 1) {
+					load();
+					return AUTO_REFRESH_SECONDS;
+				}
+				return prev - 1;
+			});
+		}, 1000);
+		return () => clearInterval(id);
 	}, []);
 
 	// Helper function to check if task is assigned to current user
@@ -605,12 +622,12 @@ export default function TasksPage() {
 						onChange={e => setCustom({ ...custom, category: e.target.value })}
 					>
 						<option value="">Select type</option>
-						<option>Rigid Boxes</option>
-						<option>Cake Boxes</option>
-						<option>Paper Bags</option>
-						<option>Stickers</option>
-						<option>Cards</option>
-						<option>Others</option>
+						<option value="Rigid Boxes">Rigid Boxes</option>
+						<option value="Cake Boxes">Cake Boxes</option>
+						<option value="Paper Bags">Paper Bags</option>
+						<option value="Stickers">Stickers</option>
+						<option value="Cards">Cards</option>
+						<option value="Invitation">Invitation</option>
 					</select>
 					
 					{/* Quantity field */}
@@ -927,6 +944,24 @@ export default function TasksPage() {
 						</div>
 					)}
 
+					{custom["category"] === "Invitation" && (
+						<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+							<h3 className="font-medium text-sm">Invitation Specifications</h3>
+							<div>
+								<label className="block text-sm font-medium mb-2">Size</label>
+								<div className="flex items-center gap-2">
+									<input type="text" className="flex-1 border rounded px-3 py-2" placeholder="Enter size" value={custom["size"] ?? ""} onChange={e => setCustom({ ...custom, size: e.target.value })} />
+									<label className="flex items-center gap-2 text-sm">
+										<input type="checkbox" checked={custom["existingSize"] ?? false} onChange={e => setCustom({ ...custom, existingSize: e.target.checked })} />
+										Existing size
+									</label>
+								</div>
+							</div>
+							<input type="text" className="w-full border rounded px-3 py-2" placeholder="Material" value={custom["material"] ?? ""} onChange={e => setCustom({ ...custom, material: e.target.value })} />
+							<input type="text" className="w-full border rounded px-3 py-2" placeholder="Envelope" value={custom["envelope"] ?? ""} onChange={e => setCustom({ ...custom, envelope: e.target.value })} />
+						</div>
+					)}
+
 					<DateTimeSelector label="Start" value={start} onChange={setStart} />
 					<DateTimeSelector label="Due" value={due} onChange={setDue} />
 
@@ -1000,6 +1035,8 @@ export default function TasksPage() {
 				<div className="flex flex-wrap items-center justify-between gap-2 mb-2">
 					<h2 className="text-lg font-medium">Tasks</h2>
 					<div className="flex flex-wrap items-center gap-2">
+						<span className="text-xs text-gray-600">Auto refresh in {refreshIn}s</span>
+						<button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { setRefreshIn(AUTO_REFRESH_SECONDS); load(); }}>Refresh now</button>
 						<button
 							onClick={async () => {
 								const completedTasks = filteredTasks.filter(t => t.status === "DONE");
@@ -1045,7 +1082,7 @@ export default function TasksPage() {
 								<option value="Paper Bags">Paper Bags</option>
 								<option value="Stickers">Stickers</option>
 								<option value="Cards">Cards</option>
-								<option value="Others">Others</option>
+								<option value="Invitation">Invitation</option>
 							</select>
 						</div>
 						<div>
@@ -1260,7 +1297,7 @@ export default function TasksPage() {
 												<option value="Paper Bags">Paper Bags</option>
 												<option value="Stickers">Stickers</option>
 												<option value="Cards">Cards</option>
-												<option value="Others">Others</option>
+												<option value="Invitation">Invitation</option>
 											</select>
 										</div>
 										<div>
@@ -1541,6 +1578,30 @@ export default function TasksPage() {
 												value={custom["material"] ?? ""}
 												onChange={e => setCustom({ ...custom, material: e.target.value })}
 											/>
+										</div>
+									)}
+
+									{custom["category"] === "Invitation" && (
+										<div className="border border-gray-200 rounded p-4 bg-gray-50">
+											<h4 className="font-medium mb-3">Invitation Specifications</h4>
+											<div className="grid grid-cols-2 gap-4">
+												<div>
+													<label className="block text-sm font-medium mb-1">Size</label>
+													<input className="w-full border rounded px-3 py-2 mb-2" value={custom["size"] ?? ""} onChange={e => setCustom({ ...custom, size: e.target.value })} />
+													<label className="flex items-center gap-2">
+														<input type="checkbox" checked={custom["existingSize"] ?? false} onChange={e => setCustom({ ...custom, existingSize: e.target.checked })} />
+														Existing size
+													</label>
+												</div>
+												<div>
+													<label className="block text-sm font-medium mb-1">Material</label>
+													<input className="w-full border rounded px-3 py-2" value={custom["material"] ?? ""} onChange={e => setCustom({ ...custom, material: e.target.value })} />
+												</div>
+												<div>
+													<label className="block text-sm font-medium mb-1">Envelope</label>
+													<input className="w-full border rounded px-3 py-2" value={custom["envelope"] ?? ""} onChange={e => setCustom({ ...custom, envelope: e.target.value })} />
+												</div>
+											</div>
 										</div>
 									)}
 
@@ -2256,6 +2317,32 @@ export default function TasksPage() {
 															<div>
 																<label className="block text-xs font-medium text-gray-600">Material</label>
 																<p className="text-gray-900">{task.customFields.material}</p>
+															</div>
+														)}
+													</div>
+												</div>
+											)}
+
+											{task.customFields.category === "Invitation" && (
+												<div className="border border-gray-200 rounded p-3 bg-gray-50">
+													<h4 className="font-medium text-sm mb-2">Invitation Specifications</h4>
+													<div className="grid grid-cols-2 gap-3 text-sm">
+														{task.customFields.size && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Size</label>
+																<p className="text-gray-900">{task.customFields.size}{task.customFields.existingSize && " (Existing size)"}</p>
+															</div>
+														)}
+														{task.customFields.material && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Material</label>
+																<p className="text-gray-900">{task.customFields.material}</p>
+															</div>
+														)}
+														{task.customFields.envelope && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Envelope</label>
+																<p className="text-gray-900">{task.customFields.envelope}</p>
 															</div>
 														)}
 													</div>
