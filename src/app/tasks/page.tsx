@@ -1122,10 +1122,6 @@ export default function TasksPage() {
 				<div className="flex flex-wrap items-center justify-between gap-2 mb-2">
 					<h2 className="text-lg font-medium">Tasks</h2>
 					<div className="flex flex-wrap items-center gap-2">
-						<label className="flex items-center gap-2 text-sm mr-2">
-							<input type="checkbox" checked={allSelectedOnPage} onChange={toggleSelectAllOnPage} />
-							Select All
-						</label>
 						{selectedIds.length > 0 && (
 							<>
 								<button
@@ -1241,6 +1237,12 @@ export default function TasksPage() {
 							Assigned to me only
 						</label>
 					</div>
+					<div className="mt-2">
+						<label className="flex items-center gap-2 text-sm">
+							<input type="checkbox" checked={allSelectedOnPage} onChange={toggleSelectAllOnPage} />
+							Select All
+						</label>
+					</div>
 					<div className="text-sm text-gray-600">
 						{filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} shown
 					</div>
@@ -1257,13 +1259,6 @@ export default function TasksPage() {
 							const color = groupBy !== "none" ? getGroupColorClasses(gkey) : null;
 							return (
 						<li key={t.id} className={"border border-black rounded p-3 " + (groupBy !== "none" ? ("border-l-4 " + (color ? color.bar : "") + " " + (color ? color.bg : "")) : "") }>
-							<div className="flex items-center justify-between gap-2">
-								<input type="checkbox" checked={isSelected(t.id)} onChange={() => toggleSelect(t.id)} />
-								<div className="flex items-center gap-2">
-									<span className="text-[10px] w-5 h-5 inline-flex items-center justify-center rounded-full bg-black text-white">{index + 1}</span>
-									<span className="font-medium flex items-center gap-2">{t.title}</span>
-								</div>
-							</div>
 							{groupBy !== "none" && (index === 0 || getGroupKey(listForRender[index-1]) !== gkey) && (
 								<div className="-mt-1 -mb-1 pb-2">
 							<div className="flex items-center justify-between">
