@@ -1994,7 +1994,7 @@ export default function TasksPage() {
 				if (!task) return null;
 				
 				return (
-					<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+					<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 						<div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
 							<div className="flex flex-wrap items-center justify-between gap-2 mb-4">
 								<h2 className="text-xl font-semibold">Task Details</h2>
@@ -2150,6 +2150,120 @@ export default function TasksPage() {
 																	Yes
 																	{task.customFields.partitionDescription && ` - ${task.customFields.partitionDescription}`}
 																</p>
+															</div>
+														)}
+													</div>
+												</div>
+											)}
+
+											{/* Cake Boxes specific fields */}
+											{task.customFields.category === "Cake Boxes" && (
+												<div className="border border-gray-200 rounded p-3 bg-gray-50">
+													<h4 className="font-medium text-sm mb-2">Cake Box Specifications</h4>
+													<div className="grid grid-cols-2 gap-3 text-sm">
+														{task.customFields.size && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Size</label>
+																<p className="text-gray-900">
+																	{task.customFields.size}
+																	{task.customFields.existingSize && " (Existing size)"}
+																</p>
+															</div>
+														)}
+														{task.customFields.hasWindow && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Window</label>
+																<p className="text-gray-900">Yes{task.customFields.windowDetails ? ` - ${task.customFields.windowDetails}` : ""}</p>
+															</div>
+														)}
+														{task.customFields.innerPrinting && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Inner Printing</label>
+																<p className="text-gray-900">Yes{task.customFields.innerPrintingDetails ? ` - ${task.customFields.innerPrintingDetails}` : ""}</p>
+															</div>
+														)}
+													</div>
+												</div>
+											)}
+
+											{/* Paper Bags specific fields */}
+											{task.customFields.category === "Paper Bags" && (
+												<div className="border border-gray-200 rounded p-3 bg-gray-50">
+													<h4 className="font-medium text-sm mb-2">Paper Bag Specifications</h4>
+													<div className="grid grid-cols-2 gap-3 text-sm">
+														{task.customFields.size && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Size</label>
+																<p className="text-gray-900">
+																	{task.customFields.size}
+																	{task.customFields.existingSize && " (Existing size)"}
+																</p>
+															</div>
+														)}
+														{task.customFields.innerPrinting && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Inner Printing</label>
+																<p className="text-gray-900">Yes{task.customFields.innerPrintingDetails ? ` - ${task.customFields.innerPrintingDetails}` : ""}</p>
+															</div>
+														)}
+														{task.customFields.rope && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Rope</label>
+																<p className="text-gray-900">{task.customFields.rope}</p>
+															</div>
+														)}
+													</div>
+												</div>
+											)}
+
+											{/* Stickers specific fields */}
+											{task.customFields.category === "Stickers" && (
+												<div className="border border-gray-200 rounded p-3 bg-gray-50">
+													<h4 className="font-medium text-sm mb-2">Sticker Specifications</h4>
+													<div className="grid grid-cols-2 gap-3 text-sm">
+														{task.customFields.size && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Size</label>
+																<p className="text-gray-900">{task.customFields.size}</p>
+															</div>
+														)}
+														{task.customFields.shape && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Shape</label>
+																<p className="text-gray-900">{task.customFields.shape}</p>
+															</div>
+														)}
+														{task.customFields.material && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Material</label>
+																<p className="text-gray-900">{task.customFields.material}</p>
+															</div>
+														)}
+													</div>
+												</div>
+											)}
+
+											{/* Cards specific fields */}
+											{task.customFields.category === "Cards" && (
+												<div className="border border-gray-200 rounded p-3 bg-gray-50">
+													<h4 className="font-medium text-sm mb-2">Card Specifications</h4>
+													<div className="grid grid-cols-2 gap-3 text-sm">
+														{task.customFields.size && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Size</label>
+																<p className="text-gray-900">{task.customFields.size}</p>
+															</div>
+														)}
+														{task.customFields.sides && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Sides</label>
+																<p className="text-gray-900">{task.customFields.sides === "double" ? "Double side" : "Single side"}</p>
+															</div>
+														)}
+														{task.customFields.material && (
+															<div>
+																<label className="block text-xs font-medium text-gray-600">Material</label>
+																<p className="text-gray-900">{task.customFields.material}</p>
 															</div>
 														)}
 													</div>
