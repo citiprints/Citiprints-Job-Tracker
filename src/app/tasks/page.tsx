@@ -1237,12 +1237,7 @@ export default function TasksPage() {
 							Assigned to me only
 						</label>
 					</div>
-					<div className="mt-2">
-						<label className="flex items-center gap-2 text-sm">
-							<input type="checkbox" checked={allSelectedOnPage} onChange={toggleSelectAllOnPage} />
-							Select All
-						</label>
-					</div>
+					{/* Removed Select All control per request */}
 					<div className="text-sm text-gray-600">
 						{filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} shown
 					</div>
