@@ -114,6 +114,7 @@ export default function TasksPage() {
 
 	const AUTO_REFRESH_SECONDS = 120;
 	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
+	const [groupBy, setGroupBy] = useState<"none"|"category"|"customer"|"status"|"assignee">("none");
 
 	// Get current user
 	useEffect(() => {
@@ -255,6 +256,28 @@ export default function TasksPage() {
 			);
 		})
 		.filter(task => (!assignedToMeOnly ? true : isAssignedToMe(task)));
+
+	function getGroupKey(t: Task): string {
+		switch (groupBy) {
+			case "category": return t.customFields?.category || "Uncategorized";
+			case "customer": return t.customerRef?.name || "No Customer";
+			case "status": return t.status;
+			case "assignee": return (t.assignments && t.assignments[0]?.user?.name) || "Unassigned";
+			default: return "";
+		}
+	}
+
+	const listForRender = React.useMemo(() => {
+		if (groupBy === "none") return filteredTasks;
+		const arr = [...filteredTasks];
+		arr.sort((a, b) => {
+			const ak = getGroupKey(a);
+			const bk = getGroupKey(b);
+			if (ak !== bk) return ak.localeCompare(bk);
+			return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+		});
+		return arr;
+	}, [filteredTasks, groupBy]);
 
 	// Subtask functions
 	async function createSubtask(taskId: string) {
@@ -1083,6 +1106,7 @@ export default function TasksPage() {
 								<option value="Stickers">Stickers</option>
 								<option value="Cards">Cards</option>
 								<option value="Invitation">Invitation</option>
+								<option value="Others">Others</option>
 							</select>
 						</div>
 						<div>
@@ -1096,6 +1120,20 @@ export default function TasksPage() {
 								<option value="NO_PAYMENT_RECEIVED">No Payment Received</option>
 								<option value="ADVANCE_RECEIVED">Advance Received</option>
 								<option value="FULL_PAYMENT_RECEIVED">Full Payment Received</option>
+							</select>
+						</div>
+						<div>
+							<label className="block text-sm font-medium mb-2">Group by:</label>
+							<select
+								value={groupBy}
+								onChange={(e) => setGroupBy(e.target.value as any)}
+								className="rounded border px-3 py-2 text-sm"
+							>
+								<option value="none">None</option>
+								<option value="category">Category</option>
+								<option value="customer">Customer</option>
+								<option value="status">Status</option>
+								<option value="assignee">Assignee</option>
 							</select>
 						</div>
 						<label className="flex items-center gap-2 text-sm mb-2">
@@ -1114,8 +1152,17 @@ export default function TasksPage() {
 					<p className="text-center text-gray-500">No tasks yet. Create one!</p>
 				) : (
 				<ul className="space-y-2">
-						{filteredTasks.map((t, index) => (
+						{listForRender.map((t, index) => (
 						<li key={t.id} className="border border-black rounded p-3">
+							{groupBy !== "none" && (index === 0 || getGroupKey(listForRender[index-1]) !== getGroupKey(t)) && (
+								<div className="-mt-1 -mb-1 pb-2">
+									<div className="flex items-center justify-between">
+										<h3 className="text-sm font-medium">{getGroupKey(t)}</h3>
+										<span className="text-xs text-gray-500">Group</span>
+									</div>
+									<div className="border-t border-gray-200 mt-1"></div>
+								</div>
+							)}
 							{editingId === t.id ? (
 								<form
 									onSubmit={async e => {
