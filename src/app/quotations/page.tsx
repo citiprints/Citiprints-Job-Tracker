@@ -23,14 +23,15 @@ function QuotationsSkeleton() {
 			{[1, 2, 3, 4, 5].map((i) => (
 				<div key={i} className="border border-black rounded p-3">
 					<div className="animate-pulse">
-						<div className="flex items-center justify-between mb-2">
-							<div className="flex items-center gap-2">
-								<div className="w-5 h-5 bg-gray-200 rounded-full"></div>
-								<div className="h-5 bg-gray-200 rounded w-48"></div>
-								<div className="h-4 bg-gray-200 rounded w-16"></div>
-								<div className="h-4 bg-gray-200 rounded w-20"></div>
-								<div className="h-4 bg-gray-200 rounded w-24"></div>
+						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+							<div className="flex flex-wrap items-center gap-2 min-w-0">
+								<div className="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></div>
+								<div className="h-5 bg-gray-200 rounded w-32 sm:w-48 max-w-full"></div>
+								<div className="h-4 bg-gray-200 rounded w-16 flex-shrink-0"></div>
+								<div className="h-4 bg-gray-200 rounded w-20 flex-shrink-0"></div>
+								<div className="h-4 bg-gray-200 rounded w-24 flex-shrink-0"></div>
 							</div>
+							<div className="h-6 bg-gray-200 rounded w-20 flex-shrink-0"></div>
 						</div>
 						<div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
 					</div>
@@ -218,8 +219,7 @@ export default function QuotationsPage() {
 				body: JSON.stringify({
 					title: editTitle,
 					description: editDesc,
-					status: editStatus,
-					priority: editPriority,
+					status: "TODO", // Always set to TODO for quotations
 					customerId: editCustomerId || undefined,
 					customFields: editCustom,
 					assigneeId: editAssigneeId || undefined
@@ -232,7 +232,6 @@ export default function QuotationsPage() {
 				setEditTitle("");
 				setEditDesc("");
 				setEditStatus("TODO");
-				setEditPriority("MEDIUM");
 				setEditCustomerId("");
 				setEditAssigneeId("");
 				setEditCustom({});
@@ -328,22 +327,6 @@ export default function QuotationsPage() {
 								<div className="flex items-center gap-2">
 									<div className="w-2 h-2 rounded-full bg-blue-500"></div>
 									<h3 className="font-medium">{q.title}</h3>
-									<span className={`text-xs px-2 py-1 rounded ${
-										q.status === "DONE" ? "bg-green-100 text-green-800" :
-										q.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-800" :
-										q.status === "BLOCKED" ? "bg-red-100 text-red-800" :
-										"bg-gray-100 text-gray-800"
-									}`}>
-										{q.status.replace("_", " ")}
-									</span>
-									<span className={`text-xs px-2 py-1 rounded ${
-										q.priority === "URGENT" ? "bg-red-100 text-red-800" :
-										q.priority === "HIGH" ? "bg-orange-100 text-orange-800" :
-										q.priority === "MEDIUM" ? "bg-yellow-100 text-yellow-800" :
-										"bg-green-100 text-green-800"
-									}`}>
-										{q.priority}
-									</span>
 								</div>
 								<div className="flex gap-2">
 									<button
@@ -524,36 +507,6 @@ export default function QuotationsPage() {
 									onChange={(e) => setEditDesc(e.target.value)}
 									rows={3}
 								/>
-							</div>
-							<div className="grid grid-cols-2 gap-3">
-								<div>
-									<label className="block text-sm font-medium mb-1">Status</label>
-									<select
-										className="w-full border rounded px-3 py-2"
-										value={editStatus}
-										onChange={(e) => setEditStatus(e.target.value as Quotation["status"])}
-									>
-										<option value="TODO">TODO</option>
-										<option value="IN_PROGRESS">IN_PROGRESS</option>
-										<option value="BLOCKED">BLOCKED</option>
-										<option value="DONE">DONE</option>
-										<option value="CANCELLED">CANCELLED</option>
-										<option value="CLIENT_TO_REVERT">CLIENT_TO_REVERT</option>
-									</select>
-								</div>
-								<div>
-									<label className="block text-sm font-medium mb-1">Priority</label>
-									<select
-										className="w-full border rounded px-3 py-2"
-										value={editPriority}
-										onChange={(e) => setEditPriority(e.target.value as "LOW" | "MEDIUM" | "HIGH" | "URGENT")}
-									>
-										<option value="LOW">LOW</option>
-										<option value="MEDIUM">MEDIUM</option>
-										<option value="HIGH">HIGH</option>
-										<option value="URGENT">URGENT</option>
-									</select>
-								</div>
 							</div>
 							<div className="grid grid-cols-2 gap-3">
 								<div>

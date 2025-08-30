@@ -52,14 +52,14 @@ function DashboardSkeleton() {
 					<div className="space-y-4">
 						{[1, 2, 3].map((i) => (
 							<div key={i} className="border border-gray-200 rounded p-3">
-								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-2">
-										<div className="w-5 h-5 bg-gray-200 rounded-full"></div>
-										<div className="h-4 bg-gray-200 rounded w-48"></div>
-										<div className="h-4 bg-gray-200 rounded w-16"></div>
-										<div className="h-4 bg-gray-200 rounded w-20"></div>
+								<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+									<div className="flex flex-wrap items-center gap-2 min-w-0">
+										<div className="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></div>
+										<div className="h-4 bg-gray-200 rounded w-32 sm:w-48 max-w-full"></div>
+										<div className="h-4 bg-gray-200 rounded w-16 flex-shrink-0"></div>
+										<div className="h-4 bg-gray-200 rounded w-20 flex-shrink-0"></div>
 									</div>
-									<div className="flex flex-col items-end gap-1">
+									<div className="flex flex-col items-end gap-1 flex-shrink-0">
 										<div className="h-4 bg-gray-200 rounded w-20"></div>
 										<div className="h-4 bg-gray-200 rounded w-16"></div>
 									</div>

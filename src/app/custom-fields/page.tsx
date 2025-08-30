@@ -10,9 +10,9 @@ function CustomFieldsSkeleton() {
 			{[1, 2, 3, 4].map((i) => (
 				<div key={i} className="border rounded p-3">
 					<div className="animate-pulse">
-						<div className="flex items-center justify-between mb-2">
-							<div className="h-5 bg-gray-200 rounded w-32"></div>
-							<div className="flex gap-2">
+						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+							<div className="h-5 bg-gray-200 rounded w-32 flex-shrink-0"></div>
+							<div className="flex gap-2 flex-shrink-0">
 								<div className="h-6 bg-gray-200 rounded w-12"></div>
 								<div className="h-6 bg-gray-200 rounded w-12"></div>
 							</div>

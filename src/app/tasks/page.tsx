@@ -42,21 +42,21 @@ function TasksSkeleton() {
 			{[1, 2, 3, 4, 5].map((i) => (
 				<div key={i} className="border border-black rounded p-3">
 					<div className="animate-pulse">
-						<div className="flex items-center justify-between mb-2">
-							<div className="flex items-center gap-2">
-								<div className="w-5 h-5 bg-gray-200 rounded-full"></div>
-								<div className="h-5 bg-gray-200 rounded w-48"></div>
-								<div className="h-4 bg-gray-200 rounded w-16"></div>
-								<div className="h-4 bg-gray-200 rounded w-20"></div>
-								<div className="h-4 bg-gray-200 rounded w-24"></div>
+						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+							<div className="flex flex-wrap items-center gap-2 min-w-0">
+								<div className="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></div>
+								<div className="h-5 bg-gray-200 rounded w-32 sm:w-48 max-w-full"></div>
+								<div className="h-4 bg-gray-200 rounded w-16 flex-shrink-0"></div>
+								<div className="h-4 bg-gray-200 rounded w-20 flex-shrink-0"></div>
+								<div className="h-4 bg-gray-200 rounded w-24 flex-shrink-0"></div>
 							</div>
-							<div className="h-6 bg-gray-200 rounded w-20"></div>
+							<div className="h-6 bg-gray-200 rounded w-20 flex-shrink-0"></div>
 						</div>
 						<div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-						<div className="flex gap-2">
-							<div className="h-8 bg-gray-200 rounded w-16"></div>
-							<div className="h-8 bg-gray-200 rounded w-16"></div>
-							<div className="h-8 bg-gray-200 rounded w-16"></div>
+						<div className="flex gap-2 flex-wrap">
+							<div className="h-8 bg-gray-200 rounded w-16 flex-shrink-0"></div>
+							<div className="h-8 bg-gray-200 rounded w-16 flex-shrink-0"></div>
+							<div className="h-8 bg-gray-200 rounded w-16 flex-shrink-0"></div>
 						</div>
 					</div>
 				</div>
