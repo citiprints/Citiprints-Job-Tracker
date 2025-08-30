@@ -241,26 +241,22 @@ export default function RootLayout({
 				headers: {
 					'Content-Type': 'application/json',
 				},
+				credentials: 'include', // Include cookies
 			});
 
-			if (res.ok) {
-				// Clear user state immediately
-				setUser(null);
-				// Clear notification counts
-				setNotificationCounts({ tasks: 0, quotations: 0 });
-				// Redirect to home page
-				window.location.href = '/';
-			} else {
-				console.error('Logout failed');
-				// Still clear user state and redirect
-				setUser(null);
-				window.location.href = '/';
-			}
+			// Always clear user state and redirect, regardless of response
+			setUser(null);
+			setNotificationCounts({ tasks: 0, quotations: 0 });
+			
+			// Force a hard redirect to clear any cached state
+			window.location.replace('/');
+			
 		} catch (error) {
 			console.error('Logout error:', error);
 			// Still clear user state and redirect
 			setUser(null);
-			window.location.href = '/';
+			setNotificationCounts({ tasks: 0, quotations: 0 });
+			window.location.replace('/');
 		} finally {
 			setIsLoggingOut(false);
 		}

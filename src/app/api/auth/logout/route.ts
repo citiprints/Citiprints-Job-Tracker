@@ -5,9 +5,23 @@ import { prisma } from "@/lib/db";
 export async function POST() {
 	const cookieStore = await cookies();
 	const sessionId = cookieStore.get("auth_session")?.value;
+	
 	if (sessionId) {
+		// Delete session from database
 		await prisma.session.delete({ where: { id: sessionId } }).catch(() => {});
-		cookieStore.set("auth_session", "", { path: "/", maxAge: 0 });
 	}
-	return NextResponse.json({ ok: true });
+	
+	// Create response with expired cookie
+	const response = NextResponse.json({ ok: true });
+	
+	// Clear the auth session cookie
+	response.cookies.set("auth_session", "", {
+		path: "/",
+		expires: new Date(0), // Expire immediately
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax"
+	});
+	
+	return response;
 }
