@@ -692,6 +692,17 @@ export default function TasksPage() {
 					</div>
 				)}
 				<h1 className="text-xl font-semibold mb-3">Create task</h1>
+				
+				{/* Quotation checkbox */}
+				<label className="flex items-center gap-2 mb-3">
+					<input
+						type="checkbox"
+						checked={isQuotation}
+						onChange={e => setIsQuotation(e.target.checked)}
+					/>
+					<span className="text-sm">Quotation</span>
+				</label>
+				
 				<form onSubmit={onCreate} className="space-y-3">
 					<input className="w-full border rounded px-3 py-2" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} required />
 					<textarea className="w-full border rounded px-3 py-2" placeholder="Description" value={desc} onChange={e => setDesc(e.target.value)} />
@@ -782,16 +793,6 @@ export default function TasksPage() {
 							<option key={u.id} value={u.id}>{u.name}</option>
 						))}
 					</select>
-					
-					{/* Quotation checkbox */}
-					<label className="flex items-center gap-2">
-						<input
-							type="checkbox"
-							checked={isQuotation}
-							onChange={e => setIsQuotation(e.target.checked)}
-						/>
-						<span className="text-sm">Quotation</span>
-					</label>
 					
 					<select
 						className="w-full border rounded px-3 py-2"
