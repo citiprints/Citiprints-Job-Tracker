@@ -131,7 +131,7 @@ export async function DELETE(
 			return NextResponse.json({ error: "Task not found" }, { status: 404 });
 		}
 
-		// Delete associated files from R2
+		// Delete associated files from R2 (don't let this block task deletion)
 		if (task.attachments && task.attachments.length > 0) {
 			const deletePromises = task.attachments.map(async (attachment) => {
 				try {
@@ -146,16 +146,41 @@ export async function DELETE(
 					await s3Client.send(deleteCommand);
 				} catch (error) {
 					console.error(`Failed to delete file ${attachment.url}:`, error);
+					// Don't throw - continue with task deletion even if file deletion fails
 				}
 			});
 
-			await Promise.all(deletePromises);
+			// Wait for file deletions but don't fail if they don't succeed
+			await Promise.allSettled(deletePromises);
 		}
 
-		// Delete the task (this will cascade delete attachments due to foreign key)
-		await prisma.task.delete({
-			where: { id },
-		});
+		// Delete all related records first (due to foreign key constraints)
+		await prisma.$transaction([
+			// Delete subtasks first (they might have attachments)
+			prisma.subtask.deleteMany({
+				where: { taskId: id }
+			}),
+			// Delete assignments
+			prisma.assignment.deleteMany({
+				where: { taskId: id }
+			}),
+			// Delete comments
+			prisma.comment.deleteMany({
+				where: { taskId: id }
+			}),
+			// Delete attachments
+			prisma.attachment.deleteMany({
+				where: { taskId: id }
+			}),
+			// Delete activity logs
+			prisma.activityLog.deleteMany({
+				where: { taskId: id }
+			}),
+			// Finally delete the task
+			prisma.task.delete({
+				where: { id }
+			})
+		]);
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

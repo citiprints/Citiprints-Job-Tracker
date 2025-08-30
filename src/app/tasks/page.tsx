@@ -638,17 +638,21 @@ export default function TasksPage() {
 	async function deleteTask(id: string) {
 		if (!confirm("Are you sure you want to delete this task?")) return;
 		
+		setDeletingId(id);
 		try {
 			const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
 			if (res.ok) {
 				setTasks(prev => prev.filter(t => t.id !== id));
 				setError(null);
+				notifyDataChange();
 			} else {
 				const errorData = await res.json();
 				setError(errorData.error || "Failed to delete task");
 			}
 		} catch (err) {
 			setError("Failed to delete task");
+		} finally {
+			setDeletingId(null);
 		}
 	}
 
@@ -2063,14 +2067,7 @@ export default function TasksPage() {
 										<button
 											type="button"
 											className="text-xs px-2 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
-											onClick={async () => {
-												if (!confirm("Delete this task?")) return;
-												setDeletingId(t.id);
-												await fetch(`/api/tasks/${t.id}`, { method: "DELETE" });
-												load();
-												setDeletingId(null);
-												notifyDataChange();
-											}}
+											onClick={() => deleteTask(t.id)}
 											disabled={deletingId === t.id}
 										>
 											{deletingId === t.id ? "Deleting..." : "Delete"}
