@@ -213,34 +213,32 @@ export default function TasksPage() {
 		setLoading(true);
 		try {
 			const [resTasks, resFields, resCustomers, resUsers] = await Promise.all([
-			fetch("/api/tasks"),
+				fetch("/api/tasks?limit=100&includeArchived=false&includeQuotations=false"),
 				fetch("/api/custom-fields"),
 				fetch("/api/customers"),
 				fetch("/api/users")
-		]);
-		if (resTasks.ok) {
-			const json = await resTasks.json();
-			const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
-				...t,
-				// server already includes subtasks
-				subtasks: t.subtasks ?? [],
-				customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
-			}));
-			// Filter out archived tasks and quotations from main list
-			const activeTasks = loaded.filter(task => 
-				task.status !== "ARCHIVED" && 
-				!task.customFields?.isQuotation
-			);
-			setTasks(activeTasks);
-		}
-		if (resFields.ok) {
-			const json = await resFields.json();
-			setFields(json.fields ?? []);
-		}
+			]);
+			
+			if (resTasks.ok) {
+				const json = await resTasks.json();
+				const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
+					...t,
+					subtasks: t.subtasks ?? [],
+					customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
+				}));
+				setTasks(loaded);
+			}
+			
+			if (resFields.ok) {
+				const json = await resFields.json();
+				setFields(json.fields ?? []);
+			}
+			
 			if (resCustomers.ok) {
 				const json = await resCustomers.json();
 				setCustomers((json.customers ?? []).map((c: any) => ({ id: c.id, name: c.name })));
 			}
+			
 			if (resUsers.ok) {
 				const json = await resUsers.json();
 				setUsers((json.users ?? []).map((u: any) => ({ id: u.id, name: u.name })));

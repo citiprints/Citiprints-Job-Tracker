@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { z } from "zod";
@@ -18,20 +18,74 @@ const CreateTaskSchema = z.object({
 	assigneeId: z.string().optional(),
 });
 
-export async function GET() {
+export async function GET(request: NextRequest) {
 	const user = await getCurrentUser();
 	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	
+	const { searchParams } = new URL(request.url);
+	const limit = parseInt(searchParams.get('limit') || '50');
+	const offset = parseInt(searchParams.get('offset') || '0');
+	const includeArchived = searchParams.get('includeArchived') === 'true';
+	const includeQuotations = searchParams.get('includeQuotations') === 'true';
+	
+	// Build where clause for filtering
+	const whereClause: any = {};
+	
+	if (!includeArchived) {
+		whereClause.status = { not: "ARCHIVED" };
+	}
+	
+	if (!includeQuotations) {
+		whereClause.customFields = {
+			not: {
+				contains: '"isQuotation":true'
+			}
+		};
+	}
+	
 	const tasks = await prisma.task.findMany({
+		where: whereClause,
 		orderBy: { createdAt: "desc" },
+		take: limit,
+		skip: offset,
 		include: { 
 			assignments: { 
 				include: { user: { select: { id: true, name: true } } } 
 			}, 
-			subtasks: true, 
-			customerRef: true 
+			subtasks: {
+				select: {
+					id: true,
+					title: true,
+					status: true,
+					assigneeId: true,
+					dueAt: true,
+					order: true
+				}
+			}, 
+			customerRef: {
+				select: {
+					id: true,
+					name: true,
+					email: true
+				}
+			} 
 		}
 	});
-	return NextResponse.json({ tasks });
+	
+	// Get total count for pagination
+	const totalCount = await prisma.task.count({
+		where: whereClause
+	});
+	
+	return NextResponse.json({ 
+		tasks,
+		pagination: {
+			total: totalCount,
+			limit,
+			offset,
+			hasMore: offset + limit < totalCount
+		}
+	});
 }
 
 export async function POST(request: Request) {
