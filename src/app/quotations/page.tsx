@@ -637,7 +637,7 @@ export default function QuotationsPage() {
 											{q.customerRef.name}
 										</span>
 									)}
-									{q.assignments?.length > 0 && (
+									{q.assignments && q.assignments.length > 0 && (
 										<span className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
 											{q.assignments.map(a => a.user.name).join(", ")}
 										</span>
