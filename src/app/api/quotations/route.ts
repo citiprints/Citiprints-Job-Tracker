@@ -13,7 +13,7 @@ export async function GET() {
 			where: {
 				customFields: {
 					path: ["isQuotation"],
-					equals: true
+					equals: "true"
 				}
 			},
 			include: {
