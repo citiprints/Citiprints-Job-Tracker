@@ -25,9 +25,8 @@ export default function SignInPage() {
       return;
     }
     
-    // Do a full page refresh to ensure layout gets correct auth state
-    // This mimics what happens when you click Sign In while already logged in
-    window.location.href = "/dashboard";
+    // Redirect to signin page after successful login
+    window.location.href = "/signin";
   }
 
   return (
