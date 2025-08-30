@@ -248,19 +248,19 @@ export default function TasksPage() {
 		load();
 	}, []);
 
-	// Auto refresh with countdown
-	useEffect(() => {
-		const id = setInterval(() => {
-			setRefreshIn(prev => {
-				if (prev <= 1) {
-					load();
-					return AUTO_REFRESH_SECONDS;
-				}
-				return prev - 1;
-			});
-		}, 1000);
-		return () => clearInterval(id);
-	}, []);
+	// Auto refresh with countdown - TEMPORARILY DISABLED
+	// useEffect(() => {
+	// 	const id = setInterval(() => {
+	// 		setRefreshIn(prev => {
+	// 			if (prev <= 1) {
+	// 				load();
+	// 				return AUTO_REFRESH_SECONDS;
+	// 			}
+	// 			return prev - 1;
+	// 		});
+	// 	}, 1000);
+	// 	return () => clearInterval(id);
+	// }, []);
 
 	// Helper function to check if task is assigned to current user
 	function isAssignedToMe(task: Task): boolean {
