@@ -9,13 +9,7 @@ export async function GET() {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const quotations = await prisma.task.findMany({
-			where: {
-				customFields: {
-					path: ["isQuotation"],
-					equals: "true"
-				}
-			},
+		const allTasks = await prisma.task.findMany({
 			include: {
 				customerRef: true,
 				assignments: {
@@ -26,6 +20,18 @@ export async function GET() {
 			},
 			orderBy: {
 				createdAt: "desc"
+			}
+		});
+
+		// Filter for quotations in JavaScript
+		const quotations = allTasks.filter(task => {
+			try {
+				const customFields = typeof task.customFields === "string" 
+					? JSON.parse(task.customFields) 
+					: task.customFields || {};
+				return customFields.isQuotation === true;
+			} catch {
+				return false;
 			}
 		});
 
