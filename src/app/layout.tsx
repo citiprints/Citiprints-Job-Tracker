@@ -85,6 +85,7 @@ export default function RootLayout({
 									<Link href="/dashboard" className="px-2 py-1 rounded border">Dashboard</Link>
 									<Link href="/tasks" className="px-2 py-1 rounded border">Tasks</Link>
 									<Link href="/archive" className="px-2 py-1 rounded border">Archive</Link>
+									<Link href="/quotations" className="px-2 py-1 rounded border">Quotations</Link>
 									<Link href="/customers" className="px-2 py-1 rounded border">Customers</Link>
 									<Link href="/custom-fields" className="px-2 py-1 rounded border">Custom fields</Link>
 									{user.role === "ADMIN" && (

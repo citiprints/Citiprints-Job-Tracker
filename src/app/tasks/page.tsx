@@ -98,6 +98,7 @@ export default function TasksPage() {
 	const [newCustomerCompany, setNewCustomerCompany] = useState("");
 	const [newCustomerAddress, setNewCustomerAddress] = useState("");
 	const [assigneeId, setAssigneeId] = useState<string>("");
+	const [isQuotation, setIsQuotation] = useState<boolean>(false);
 	const [files, setFiles] = useState<File[]>([]);
 	const [dragActive, setDragActive] = useState(false);
 	
@@ -500,10 +501,10 @@ export default function TasksPage() {
 			body: JSON.stringify({ 
 				title, 
 				description: desc, 
-				startAt: start ? new Date(start).toISOString() : undefined, 
-				dueAt: due ? new Date(due).toISOString() : undefined, 
+				startAt: isQuotation ? null : (start ? new Date(start).toISOString() : undefined), 
+				dueAt: isQuotation ? null : (due ? new Date(due).toISOString() : undefined), 
 				customerId: customerId || undefined, 
-				customFields: { ...custom, attachments: uploadedFiles }, 
+				customFields: { ...custom, attachments: uploadedFiles, isQuotation }, 
 				assigneeId: assigneeId || undefined 
 			})
 		});
@@ -519,6 +520,7 @@ export default function TasksPage() {
 		setDue("");
 		setCustomerId("");
 		setAssigneeId("");
+		setIsQuotation(false);
 		setCustom({});
 		setFiles([]);
 		setShowNewCustomerForm(false);
@@ -780,6 +782,17 @@ export default function TasksPage() {
 							<option key={u.id} value={u.id}>{u.name}</option>
 						))}
 					</select>
+					
+					{/* Quotation checkbox */}
+					<label className="flex items-center gap-2">
+						<input
+							type="checkbox"
+							checked={isQuotation}
+							onChange={e => setIsQuotation(e.target.checked)}
+						/>
+						<span className="text-sm">Quotation</span>
+					</label>
+					
 					<select
 						className="w-full border rounded px-3 py-2"
 						value={custom["category"] ?? ""}
@@ -1126,8 +1139,12 @@ export default function TasksPage() {
 						</div>
 					)}
 
-					<DateTimeSelector label="Start" value={start} onChange={setStart} />
-					<DateTimeSelector label="Due" value={due} onChange={setDue} />
+					{!isQuotation && (
+						<>
+							<DateTimeSelector label="Start" value={start} onChange={setStart} />
+							<DateTimeSelector label="Due" value={due} onChange={setDue} />
+						</>
+					)}
 
 					{/* File Upload */}
 					<div
@@ -2027,13 +2044,7 @@ export default function TasksPage() {
 										>
 											Delete
 										</button>
-										<button
-											type="button"
-											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
-											onClick={() => setEditingTask(t)}
-										>
-											Edit
-										</button>
+
 										<button
 											type="button"
 											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
