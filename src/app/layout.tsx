@@ -61,23 +61,31 @@ export default function RootLayout({
 		const userToCheck = currentUser || user;
 		if (!userToCheck) return;
 		
+		console.log('📊 Loading notification counts...');
 		try {
 			const [tasksRes, quotationsRes] = await Promise.all([
 				fetch('/api/tasks?limit=1&includeArchived=false&includeQuotations=false'),
 				fetch('/api/quotations')
 			]);
 			
+			console.log('📡 Tasks response status:', tasksRes.status);
+			console.log('📡 Quotations response status:', quotationsRes.status);
+			
 			if (tasksRes.ok) {
 				const tasksData = await tasksRes.json();
-				setNotificationCounts(prev => ({ ...prev, tasks: tasksData.totalCount || 0 }));
+				const taskCount = tasksData.totalCount || 0;
+				console.log('📋 Task count:', taskCount);
+				setNotificationCounts(prev => ({ ...prev, tasks: taskCount }));
 			}
 			
 			if (quotationsRes.ok) {
 				const quotationsData = await quotationsRes.json();
-				setNotificationCounts(prev => ({ ...prev, quotations: quotationsData.length || 0 }));
+				const quotationCount = quotationsData.length || 0;
+				console.log('📄 Quotation count:', quotationCount);
+				setNotificationCounts(prev => ({ ...prev, quotations: quotationCount }));
 			}
 		} catch (error) {
-			console.error('Failed to load notification counts:', error);
+			console.error('🚨 Failed to load notification counts:', error);
 		}
 	};
 
@@ -87,13 +95,19 @@ export default function RootLayout({
 		
 		setIsLoggingOut(true);
 		try {
-			await fetch('/api/auth/logout', {
+			console.log('🚪 Logging out...');
+			const res = await fetch('/api/auth/logout', {
 				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
 				credentials: 'include',
 			});
+			console.log('📡 Logout response status:', res.status);
 		} catch (error) {
-			console.error('Logout error:', error);
+			console.error('🚨 Logout error:', error);
 		} finally {
+			console.log('🏁 Logout complete, redirecting...');
 			// Always clear state and redirect
 			setUser(null);
 			setNotificationCounts({ tasks: 0, quotations: 0 });
@@ -183,10 +197,19 @@ export default function RootLayout({
 		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 		window.addEventListener('appinstalled', handleAppInstalled);
 
+		// Force auth check on focus (when user returns to tab)
+		const handleFocus = () => {
+			console.log('🔄 Tab focused, checking auth...');
+			checkAuth();
+		};
+
+		window.addEventListener('focus', handleFocus);
+
 		// Cleanup
 		return () => {
 			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 			window.removeEventListener('appinstalled', handleAppInstalled);
+			window.removeEventListener('focus', handleFocus);
 		};
 	}, []);
 
