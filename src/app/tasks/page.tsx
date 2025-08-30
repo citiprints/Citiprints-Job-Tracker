@@ -696,11 +696,10 @@ export default function TasksPage() {
 				description: task.description,
 				status: "TODO" as const, // Always start as TODO
 				priority: task.priority,
-				startAt: null, // Reset start time
-				dueAt: null, // Reset due time
 				customerId: task.customerId,
 				customFields: task.customFields,
 				assignments: task.assignments?.map(a => ({ userId: a.user.id, role: a.role })) || []
+				// Omitting startAt and dueAt to reset them to null in the database
 			};
 
 			const res = await fetch("/api/tasks", {
