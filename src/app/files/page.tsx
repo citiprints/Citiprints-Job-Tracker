@@ -13,6 +13,8 @@ export default function FilesPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [deletingKey, setDeletingKey] = useState<string | null>(null);
+	const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+	const [bulkDeleting, setBulkDeleting] = useState(false);
 
 	useEffect(() => {
 		loadFiles();
@@ -46,6 +48,11 @@ export default function FilesPage() {
 			
 			if (res.ok) {
 				setFiles(prev => prev.filter(f => f.key !== key));
+				setSelectedFiles(prev => {
+					const newSet = new Set(prev);
+					newSet.delete(key);
+					return newSet;
+				});
 			} else {
 				const errorData = await res.json();
 				alert(errorData.error || "Failed to delete file");
@@ -54,6 +61,60 @@ export default function FilesPage() {
 			alert("Failed to delete file");
 		} finally {
 			setDeletingKey(null);
+		}
+	}
+
+	async function bulkDeleteFiles() {
+		if (selectedFiles.size === 0) return;
+		
+		const confirmMessage = `Are you sure you want to delete ${selectedFiles.size} file${selectedFiles.size > 1 ? 's' : ''}?`;
+		if (!confirm(confirmMessage)) return;
+		
+		setBulkDeleting(true);
+		try {
+			const deletePromises = Array.from(selectedFiles).map(async (key) => {
+				try {
+					const res = await fetch(`/api/files/${encodeURIComponent(key)}`, {
+						method: "DELETE"
+					});
+					return res.ok ? key : null;
+				} catch (error) {
+					console.error(`Failed to delete file ${key}:`, error);
+					return null;
+				}
+			});
+
+			const deletedKeys = (await Promise.all(deletePromises)).filter(key => key !== null);
+			
+			if (deletedKeys.length > 0) {
+				setFiles(prev => prev.filter(f => !deletedKeys.includes(f.key)));
+				setSelectedFiles(new Set());
+				alert(`Successfully deleted ${deletedKeys.length} file${deletedKeys.length > 1 ? 's' : ''}`);
+			}
+		} catch (error) {
+			alert("Failed to delete some files");
+		} finally {
+			setBulkDeleting(false);
+		}
+	}
+
+	function toggleFileSelection(key: string) {
+		setSelectedFiles(prev => {
+			const newSet = new Set(prev);
+			if (newSet.has(key)) {
+				newSet.delete(key);
+			} else {
+				newSet.add(key);
+			}
+			return newSet;
+		});
+	}
+
+	function toggleAllFiles() {
+		if (selectedFiles.size === files.length) {
+			setSelectedFiles(new Set());
+		} else {
+			setSelectedFiles(new Set(files.map(f => f.key)));
 		}
 	}
 
@@ -88,12 +149,23 @@ export default function FilesPage() {
 		<div className="container mx-auto px-4 py-8">
 			<div className="flex justify-between items-center mb-6">
 				<h1 className="text-2xl font-bold">File Uploads</h1>
-				<button
-					onClick={loadFiles}
-					className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-				>
-					Refresh
-				</button>
+				<div className="flex gap-2">
+					{selectedFiles.size > 0 && (
+						<button
+							onClick={bulkDeleteFiles}
+							disabled={bulkDeleting}
+							className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+						>
+							{bulkDeleting ? "Deleting..." : `Delete ${selectedFiles.size} File${selectedFiles.size > 1 ? 's' : ''}`}
+						</button>
+					)}
+					<button
+						onClick={loadFiles}
+						className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+					>
+						Refresh
+					</button>
+				</div>
 			</div>
 
 			{error && (
@@ -112,6 +184,14 @@ export default function FilesPage() {
 						<table className="min-w-full divide-y divide-gray-200">
 							<thead className="bg-gray-50">
 								<tr>
+									<th className="px-6 py-3 text-left">
+										<input
+											type="checkbox"
+											checked={selectedFiles.size === files.length && files.length > 0}
+											onChange={toggleAllFiles}
+											className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+										/>
+									</th>
 									<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
 										File Name
 									</th>
@@ -129,6 +209,14 @@ export default function FilesPage() {
 							<tbody className="bg-white divide-y divide-gray-200">
 								{files.map((file) => (
 									<tr key={file.key} className="hover:bg-gray-50">
+										<td className="px-6 py-4 whitespace-nowrap">
+											<input
+												type="checkbox"
+												checked={selectedFiles.has(file.key)}
+												onChange={() => toggleFileSelection(file.key)}
+												className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+											/>
+										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<div className="flex items-center">
 												<div className="text-sm font-medium text-gray-900">
@@ -170,6 +258,11 @@ export default function FilesPage() {
 			)}
 
 			<div className="mt-4 text-sm text-gray-500">
+				{selectedFiles.size > 0 && (
+					<span className="mr-4">
+						{selectedFiles.size} of {files.length} files selected
+					</span>
+				)}
 				Total files: {files.length} | Total size: {formatFileSize(files.reduce((sum, file) => sum + file.size, 0))}
 			</div>
 		</div>
