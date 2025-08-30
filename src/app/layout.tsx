@@ -108,6 +108,13 @@ export default function RootLayout({
 			console.error('🚨 Logout error:', error);
 		} finally {
 			console.log('🏁 Logout complete, redirecting...');
+			// Clear auth state
+			localStorage.removeItem('auth_state');
+			localStorage.removeItem('user');
+			
+			// Trigger auth change event
+			window.dispatchEvent(new CustomEvent('authChanged'));
+			
 			// Always clear state and redirect
 			setUser(null);
 			setNotificationCounts({ tasks: 0, quotations: 0 });
@@ -205,11 +212,20 @@ export default function RootLayout({
 
 		window.addEventListener('focus', handleFocus);
 
+		// Periodic auth check to catch any missed state changes
+		const authCheckInterval = setInterval(() => {
+			if (!user && !loading) {
+				console.log('⏰ Periodic auth check...');
+				checkAuth();
+			}
+		}, 5000); // Check every 5 seconds if not logged in
+
 		// Cleanup
 		return () => {
 			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 			window.removeEventListener('appinstalled', handleAppInstalled);
 			window.removeEventListener('focus', handleFocus);
+			clearInterval(authCheckInterval);
 		};
 	}, []);
 
@@ -219,8 +235,29 @@ export default function RootLayout({
 			loadNotificationCounts();
 		};
 
+		// Listen for storage events (when auth state changes in other tabs/pages)
+		const handleStorageChange = (e: StorageEvent) => {
+			if (e.key === 'auth_state' || e.key === 'user') {
+				console.log('🔄 Storage change detected, checking auth...');
+				checkAuth();
+			}
+		};
+
+		// Listen for custom auth events
+		const handleAuthChange = () => {
+			console.log('🔄 Auth change event detected, checking auth...');
+			checkAuth();
+		};
+
 		window.addEventListener('dataChanged', handleDataChange);
-		return () => window.removeEventListener('dataChanged', handleDataChange);
+		window.addEventListener('storage', handleStorageChange);
+		window.addEventListener('authChanged', handleAuthChange);
+
+		return () => {
+			window.removeEventListener('dataChanged', handleDataChange);
+			window.removeEventListener('storage', handleStorageChange);
+			window.removeEventListener('authChanged', handleAuthChange);
+		};
 	}, [user]);
 
 	return (

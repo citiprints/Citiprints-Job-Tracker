@@ -24,7 +24,15 @@ export default function SignInPage() {
       setError(json.error ?? "Failed to sign in");
       return;
     }
-    router.push("/");
+    
+    // Trigger auth change event to update layout
+    window.dispatchEvent(new CustomEvent('authChanged'));
+    
+    // Set a flag in localStorage to indicate auth state change
+    localStorage.setItem('auth_state', 'logged_in');
+    
+    // Redirect to dashboard
+    router.push("/dashboard");
   }
 
   return (
