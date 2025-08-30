@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
-import { db } from "@/lib/db";
+import { prisma } from "@/lib/db";
 
 export async function GET() {
 	try {
@@ -9,7 +9,7 @@ export async function GET() {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		const quotations = await db.task.findMany({
+		const quotations = await prisma.task.findMany({
 			where: {
 				customFields: {
 					path: ["isQuotation"],
