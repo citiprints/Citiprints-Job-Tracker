@@ -1,7 +1,15 @@
 "use client";
 import "./globals.css";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+
+type User = {
+	id: string;
+	name: string;
+	email: string;
+	role: string;
+	active: boolean;
+};
 
 type NotificationCounts = {
 	tasks: number;
@@ -13,31 +21,132 @@ export default function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const [user, setUser] = useState<any>(null);
+	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [theme, setTheme] = useState<"light" | "dark">("light");
 	const [notificationCounts, setNotificationCounts] = useState<NotificationCounts>({ tasks: 0, quotations: 0 });
 	const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 	const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
-	const [authChecked, setAuthChecked] = useState(false);
 
+	// Simple auth check function
+	const checkAuth = async () => {
+		try {
+			const res = await fetch("/api/auth/me");
+			if (res.ok) {
+				const userData = await res.json();
+				setUser(userData);
+				// Load notification counts
+				loadNotificationCounts();
+			} else {
+				setUser(null);
+				setNotificationCounts({ tasks: 0, quotations: 0 });
+			}
+		} catch (error) {
+			console.error('Auth check error:', error);
+			setUser(null);
+			setNotificationCounts({ tasks: 0, quotations: 0 });
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	// Load notification counts
+	const loadNotificationCounts = async () => {
+		if (!user) return;
+		
+		try {
+			const [tasksRes, quotationsRes] = await Promise.all([
+				fetch('/api/tasks?limit=1&includeArchived=false&includeQuotations=false'),
+				fetch('/api/quotations')
+			]);
+			
+			if (tasksRes.ok) {
+				const tasksData = await tasksRes.json();
+				setNotificationCounts(prev => ({ ...prev, tasks: tasksData.totalCount || 0 }));
+			}
+			
+			if (quotationsRes.ok) {
+				const quotationsData = await quotationsRes.json();
+				setNotificationCounts(prev => ({ ...prev, quotations: quotationsData.length || 0 }));
+			}
+		} catch (error) {
+			console.error('Failed to load notification counts:', error);
+		}
+	};
+
+	// Handle logout
+	const handleLogout = async () => {
+		if (isLoggingOut) return;
+		
+		setIsLoggingOut(true);
+		try {
+			await fetch('/api/auth/logout', {
+				method: 'POST',
+				credentials: 'include',
+			});
+		} catch (error) {
+			console.error('Logout error:', error);
+		} finally {
+			// Always clear state and redirect
+			setUser(null);
+			setNotificationCounts({ tasks: 0, quotations: 0 });
+			window.location.replace('/signin');
+		}
+	};
+
+	// Toggle theme
+	const toggleTheme = () => {
+		const newTheme = theme === "light" ? "dark" : "light";
+		setTheme(newTheme);
+		localStorage.setItem("theme", newTheme);
+		document.documentElement.setAttribute("data-theme", newTheme);
+	};
+
+	// PWA functions
+	const dismissInstallPrompt = () => {
+		setShowInstallPrompt(false);
+		localStorage.setItem('installPromptDismissed', 'true');
+	};
+
+	const handleInstallClick = async () => {
+		if (deferredPrompt) {
+			try {
+				await deferredPrompt.prompt();
+			} catch (error) {
+				console.error('Install prompt failed:', error);
+				alert('To install this app, look for the "Add to Home Screen" option in your browser menu.');
+			}
+		} else {
+			alert('To install this app, look for the "Add to Home Screen" option in your browser menu.');
+		}
+	};
+
+	// Initialize on mount
 	useEffect(() => {
-		// Check if app is installed
+		// Check auth immediately
+		checkAuth();
+
+		// Initialize theme
+		const savedTheme = localStorage.getItem("theme") as "light" | "dark";
+		if (savedTheme) {
+			setTheme(savedTheme);
+			document.documentElement.setAttribute("data-theme", savedTheme);
+		}
+
+		// PWA install prompt
 		const checkIfInstalled = () => {
 			if (window.matchMedia('(display-mode: standalone)').matches) {
 				setShowInstallPrompt(false);
 				return;
 			}
 			
-			// Check if user dismissed the prompt
 			const dismissed = localStorage.getItem('installPromptDismissed');
 			if (dismissed) {
 				setShowInstallPrompt(false);
 				return;
 			}
 			
-			// Show prompt for mobile users after a delay
 			if (window.innerWidth <= 768) {
 				setTimeout(() => {
 					setShowInstallPrompt(true);
@@ -47,55 +156,13 @@ export default function RootLayout({
 
 		checkIfInstalled();
 
-		// Check if user is logged in
-		async function checkAuth() {
-			try {
-				const res = await fetch("/api/auth/me");
-				if (res.ok) {
-					const userData = await res.json();
-					setUser(userData);
-					// Load notification counts if user is logged in
-					loadNotificationCounts();
-				} else {
-					setUser(null);
-					setNotificationCounts({ tasks: 0, quotations: 0 });
-				}
-			} catch (error) {
-				console.error('Auth check error:', error);
-				setUser(null);
-				setNotificationCounts({ tasks: 0, quotations: 0 });
-			} finally {
-				setLoading(false);
-				setAuthChecked(true);
-			}
-		}
-
-		// Check auth immediately
-		checkAuth();
-
-		// Listen for auth state changes (e.g., after login/logout)
-		const handleStorageChange = () => {
-			checkAuth();
-		};
-
-		// Listen for focus events (when user returns to tab)
-		const handleFocus = () => {
-			checkAuth();
-		};
-
-		// Listen for data change events
-		const handleDataChange = () => {
-			loadNotificationCounts();
-		};
-
-		// Listen for beforeinstallprompt event
+		// Event listeners
 		const handleBeforeInstallPrompt = (e: any) => {
 			e.preventDefault();
 			setDeferredPrompt(e);
 			setShowInstallPrompt(true);
 		};
 
-		// Listen for appinstalled event
 		const handleAppInstalled = () => {
 			setShowInstallPrompt(false);
 			setDeferredPrompt(null);
@@ -106,307 +173,155 @@ export default function RootLayout({
 			navigator.serviceWorker.register('/sw.js').catch(console.error);
 		}
 
-		window.addEventListener('storage', handleStorageChange);
-		window.addEventListener('focus', handleFocus);
-		window.addEventListener('dataChanged', handleDataChange);
+		// Add event listeners
 		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 		window.addEventListener('appinstalled', handleAppInstalled);
-		window.addEventListener('resize', checkIfInstalled);
 
+		// Cleanup
 		return () => {
-			window.removeEventListener('storage', handleStorageChange);
-			window.removeEventListener('focus', handleFocus);
-			window.removeEventListener('dataChanged', handleDataChange);
 			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 			window.removeEventListener('appinstalled', handleAppInstalled);
-			window.removeEventListener('resize', checkIfInstalled);
 		};
-	}, [user]);
-
-	// Initialize theme
-	useEffect(() => {
-		// Check theme from localStorage
-		const savedTheme = localStorage.getItem("theme") as "light" | "dark";
-		if (savedTheme) {
-			setTheme(savedTheme);
-			document.documentElement.setAttribute("data-theme", savedTheme);
-		}
 	}, []);
 
-	async function loadNotificationCounts() {
-		try {
-			const [tasksRes, quotationsRes] = await Promise.all([
-				fetch("/api/tasks"),
-				fetch("/api/quotations")
-			]);
+	// Listen for data changes
+	useEffect(() => {
+		const handleDataChange = () => {
+			loadNotificationCounts();
+		};
 
-			if (tasksRes.ok) {
-				const tasksData = await tasksRes.json();
-				const activeTasks = (tasksData.tasks || []).filter((task: any) => {
-					const customFields = typeof task.customFields === "string" 
-						? JSON.parse(task.customFields) 
-						: task.customFields || {};
-					return task.status !== "ARCHIVED" && !customFields.isQuotation;
-				});
-				setNotificationCounts(prev => ({ ...prev, tasks: activeTasks.length }));
-			}
-
-			if (quotationsRes.ok) {
-				const quotationsData = await quotationsRes.json();
-				setNotificationCounts(prev => ({ ...prev, quotations: quotationsData.quotations?.length || 0 }));
-			}
-		} catch (error) {
-			console.error("Failed to load notification counts:", error);
-		}
-	}
-
-	const toggleTheme = () => {
-		const newTheme = theme === "light" ? "dark" : "light";
-		setTheme(newTheme);
-		localStorage.setItem("theme", newTheme);
-		document.documentElement.setAttribute("data-theme", newTheme);
-	};
-
-	const handleInstallClick = async () => {
-		if (deferredPrompt) {
-			try {
-				// Show the install prompt
-				deferredPrompt.prompt();
-				
-				// Wait for the user to respond to the prompt
-				const { outcome } = await deferredPrompt.userChoice;
-				
-				if (outcome === 'accepted') {
-					console.log('User accepted the install prompt');
-				} else {
-					console.log('User dismissed the install prompt');
-				}
-				
-				// Clear the deferredPrompt
-				setDeferredPrompt(null);
-				setShowInstallPrompt(false);
-			} catch (error) {
-				console.error('Error showing install prompt:', error);
-				// Fallback to manual installation instructions
-				showManualInstallInstructions();
-			}
-		} else {
-			// No deferred prompt available, show manual instructions
-			showManualInstallInstructions();
-		}
-	};
-
-	const showManualInstallInstructions = () => {
-		const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-		const isAndroid = /Android/.test(navigator.userAgent);
-		
-		let instructions = '';
-		
-		if (isIOS) {
-			instructions = 'To install: Tap the Share button (📤) in Safari, then tap "Add to Home Screen"';
-		} else if (isAndroid) {
-			instructions = 'To install: Tap the menu (⋮) in Chrome, then tap "Add to Home Screen"';
-		} else {
-			instructions = 'To install: Look for the install option in your browser menu';
-		}
-		
-		alert(`Installation Instructions:\n\n${instructions}`);
-		setShowInstallPrompt(false);
-	};
-
-	const dismissInstallPrompt = () => {
-		setShowInstallPrompt(false);
-		// Don't show again for this session
-		localStorage.setItem('installPromptDismissed', 'true');
-	};
-
-	// Debug function to manually show install prompt
-	const debugShowInstallPrompt = () => {
-		console.log('Debug: Manually showing install prompt');
-		console.log('Deferred prompt available:', !!deferredPrompt);
-		console.log('User agent:', navigator.userAgent);
-		console.log('Screen width:', window.innerWidth);
-		setShowInstallPrompt(true);
-	};
-
-	// Add debug function to window for testing
-	if (typeof window !== 'undefined') {
-		(window as any).debugShowInstallPrompt = debugShowInstallPrompt;
-	}
-
-	const handleLogout = async () => {
-		if (isLoggingOut) return; // Prevent multiple clicks
-		
-		setIsLoggingOut(true);
-		try {
-			const res = await fetch('/api/auth/logout', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				credentials: 'include', // Include cookies
-			});
-
-			// Clear user state immediately
-			setUser(null);
-			setNotificationCounts({ tasks: 0, quotations: 0 });
-			setAuthChecked(false); // Reset auth check state
-			
-			// Small delay to ensure state is cleared before redirect
-			setTimeout(() => {
-				window.location.replace('/signin');
-			}, 100);
-			
-		} catch (error) {
-			console.error('Logout error:', error);
-			// Still clear user state and redirect
-			setUser(null);
-			setNotificationCounts({ tasks: 0, quotations: 0 });
-			setAuthChecked(false);
-			setTimeout(() => {
-				window.location.replace('/signin');
-			}, 100);
-		} finally {
-			setIsLoggingOut(false);
-		}
-	};
+		window.addEventListener('dataChanged', handleDataChange);
+		return () => window.removeEventListener('dataChanged', handleDataChange);
+	}, [user]);
 
 	return (
 		<html lang="en" data-theme={theme}>
 			<head>
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<meta name="description" content="Task management and job tracking for Citiprints" />
+				<meta name="description" content="Citiprints Job Tracker - Manage your jobs, tasks, and customers efficiently" />
 				<meta name="theme-color" content="#000000" />
 				<meta name="apple-mobile-web-app-capable" content="yes" />
 				<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-				<meta name="apple-mobile-web-app-title" content="Citiprints" />
+				<meta name="apple-mobile-web-app-title" content="Citiprints Job Tracker" />
 				<link rel="manifest" href="/manifest.json" />
 				<link rel="apple-touch-icon" href="/icon-192.png" />
 				<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
 				<link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
 				<link rel="shortcut icon" href="/favicon.png" />
-				<script
-					dangerouslySetInnerHTML={{
-						__html: `
-							(function() {
-								const theme = localStorage.getItem('theme') || 'light';
-								document.documentElement.setAttribute('data-theme', theme);
-							})();
-						`,
-					}}
-				/>
 			</head>
-			<body className="min-h-screen bg-gray-50">
-				<header className="bg-white shadow-sm border-b">
-					<div className="container mx-auto px-4 py-3">
-						<div className="flex flex-wrap items-center justify-between gap-4">
-							<Link href="/" className="text-xl font-bold">
-								Citiprints Job Tracker
-							</Link>
-							
-							{/* Navigation */}
-							{!loading && authChecked && (
-								<nav className="flex items-center gap-4 text-sm">
-									{user ? (
-										<>
-											<div className="flex items-center gap-2 text-gray-600">
-												<span>Signed in as:</span>
-												<span className="font-medium text-gray-800">{user.name}</span>
-											</div>
-											<Link href="/dashboard" className="px-2 py-1 rounded border">
-												Dashboard
-											</Link>
-											<Link href="/tasks" className="px-2 py-1 rounded border relative">
-												Tasks
-												{notificationCounts.tasks > 0 && (
-													<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-														{notificationCounts.tasks > 99 ? '99+' : notificationCounts.tasks}
-													</span>
-												)}
-											</Link>
-											<Link href="/quotations" className="px-2 py-1 rounded border relative">
-												Quotations
-												{notificationCounts.quotations > 0 && (
-													<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-														{notificationCounts.quotations > 99 ? '99+' : notificationCounts.quotations}
-													</span>
-												)}
-											</Link>
-											<Link href="/archive" className="px-2 py-1 rounded border">
-												Archive
-											</Link>
-											<Link href="/custom-fields" className="px-2 py-1 rounded border">
-												Custom Fields
-											</Link>
-											<Link href="/files" className="px-2 py-1 rounded border">
-												Files
-											</Link>
-											<button
-												onClick={toggleTheme}
-												className="px-2 py-1 rounded border"
-											>
-												{theme === "light" ? "🌙" : "☀️"}
-											</button>
-											<button
-												onClick={handleLogout}
-												className="px-2 py-1 rounded border bg-red-50 text-red-700 hover:bg-red-100"
-											>
-												{isLoggingOut ? 'Logging out...' : 'Logout'}
-											</button>
-										</>
-									) : (
-										<>
-											<Link href="/signin" className="px-2 py-1 rounded border">
-												Sign In
-											</Link>
-											<Link href="/signup" className="px-2 py-1 rounded border bg-black text-white hover:bg-gray-800">
-												Sign Up
-											</Link>
-										</>
-									)}
-								</nav>
-							)}
-						</div>
-					</div>
-				</header>
+			<body className="min-h-screen bg-background text-foreground">
+				<div className="flex flex-col min-h-screen">
+					{/* Header */}
+					<header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+						<div className="container mx-auto px-4 py-3">
+							<div className="flex items-center justify-between">
+								{/* Logo */}
+								<Link href="/" className="text-xl font-bold">
+									Citiprints Job Tracker
+								</Link>
 
-				<main className="container mx-auto px-4 py-8">
-					{children}
-				</main>
-
-				{/* Install Prompt */}
-				{showInstallPrompt && (
-					<div className="fixed bottom-4 left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
-						<div className="flex items-center justify-between">
-							<div className="flex items-center space-x-3">
-								<div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
-									<span className="text-white text-xl">📱</span>
-								</div>
-								<div>
-									<h3 className="font-semibold text-gray-900">Install App</h3>
-									<p className="text-sm text-gray-600">Add to home screen for quick access</p>
-									{deferredPrompt && (
-										<p className="text-xs text-green-600 mt-1">✓ Browser supports installation</p>
-									)}
-								</div>
-							</div>
-							<div className="flex space-x-2">
-								<button
-									onClick={handleInstallClick}
-									className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800"
-								>
-									{deferredPrompt ? 'Install' : 'Install'}
-								</button>
-								<button
-									onClick={dismissInstallPrompt}
-									className="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm"
-								>
-									✕
-								</button>
+								{/* Navigation */}
+								{!loading && (
+									<nav className="flex items-center gap-4 text-sm">
+										{user ? (
+											<>
+												<div className="flex items-center gap-2 text-gray-600">
+													<span>Signed in as:</span>
+													<span className="font-medium text-gray-800">{user.name}</span>
+												</div>
+												<Link href="/dashboard" className="px-2 py-1 rounded border">
+													Dashboard
+												</Link>
+												<Link href="/tasks" className="px-2 py-1 rounded border relative">
+													Tasks
+													{notificationCounts.tasks > 0 && (
+														<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+															{notificationCounts.tasks > 99 ? '99+' : notificationCounts.tasks}
+														</span>
+													)}
+												</Link>
+												<Link href="/quotations" className="px-2 py-1 rounded border relative">
+													Quotations
+													{notificationCounts.quotations > 0 && (
+														<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+															{notificationCounts.quotations > 99 ? '99+' : notificationCounts.quotations}
+														</span>
+													)}
+												</Link>
+												<Link href="/archive" className="px-2 py-1 rounded border">
+													Archive
+												</Link>
+												<Link href="/custom-fields" className="px-2 py-1 rounded border">
+													Custom Fields
+												</Link>
+												<Link href="/files" className="px-2 py-1 rounded border">
+													Files
+												</Link>
+												<button
+													onClick={toggleTheme}
+													className="px-2 py-1 rounded border"
+												>
+													{theme === "light" ? "🌙" : "☀️"}
+												</button>
+												<button
+													onClick={handleLogout}
+													className="px-2 py-1 rounded border bg-red-50 text-red-700 hover:bg-red-100"
+												>
+													{isLoggingOut ? 'Logging out...' : 'Logout'}
+												</button>
+											</>
+										) : (
+											<>
+												<Link href="/signin" className="px-2 py-1 rounded border">
+													Sign In
+												</Link>
+												<Link href="/signup" className="px-2 py-1 rounded border bg-black text-white hover:bg-gray-800">
+													Sign Up
+												</Link>
+											</>
+										)}
+									</nav>
+								)}
 							</div>
 						</div>
-					</div>
-				)}
+					</header>
+
+					{/* Main Content */}
+					<main className="flex-1 container mx-auto px-4 py-6">
+						{children}
+					</main>
+
+					{/* PWA Install Prompt */}
+					{showInstallPrompt && (
+						<div className="fixed bottom-4 left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
+							<div className="flex items-center justify-between">
+								<div className="flex items-center gap-3">
+									<div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+										<span className="text-white text-lg">📱</span>
+									</div>
+									<div>
+										<h3 className="font-semibold">Install Citiprints Job Tracker</h3>
+										<p className="text-sm text-gray-600">Add to home screen for quick access</p>
+									</div>
+								</div>
+								<div className="flex gap-2">
+									<button
+										onClick={dismissInstallPrompt}
+										className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700"
+									>
+										Not now
+									</button>
+									<button
+										onClick={handleInstallClick}
+										className="px-3 py-1 text-sm bg-black text-white rounded hover:bg-gray-800"
+									>
+										Install
+									</button>
+								</div>
+							</div>
+						</div>
+					)}
+				</div>
 			</body>
 		</html>
 	);
