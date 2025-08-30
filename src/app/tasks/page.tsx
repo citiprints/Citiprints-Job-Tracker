@@ -118,6 +118,7 @@ export default function TasksPage() {
 	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
 	const [groupBy, setGroupBy] = useState<"none"|"category"|"customer"|"status"|"assignee">("none");
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
+	const [openDatePickers, setOpenDatePickers] = useState<Set<string>>(new Set());
 
 	function toggleSelect(id: string) {
 		setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -247,27 +248,24 @@ export default function TasksPage() {
 		load();
 	}, []);
 
-	// Auto refresh with countdown
+	// Auto refresh with countdown - completely disabled when any date picker is open
 	useEffect(() => {
+		if (openDatePickers.size > 0) {
+			// Don't run auto-refresh when any date picker is open
+			return;
+		}
+		
 		const id = setInterval(() => {
 			setRefreshIn(prev => {
 				if (prev <= 1) {
-					// Only auto-refresh if no date pickers are open
-					// Check if any date picker elements are currently open
-					const datePickers = document.querySelectorAll('[data-date-picker-open="true"]');
-					if (datePickers.length === 0) {
-						load();
-						return AUTO_REFRESH_SECONDS;
-					} else {
-						// If date pickers are open, wait another 30 seconds
-						return 30;
-					}
+					load();
+					return AUTO_REFRESH_SECONDS;
 				}
 				return prev - 1;
 			});
 		}, 1000);
 		return () => clearInterval(id);
-	}, []);
+	}, [openDatePickers]);
 
 	// Helper function to check if task is assigned to current user
 	function isAssignedToMe(task: Task): boolean {
@@ -531,13 +529,14 @@ export default function TasksPage() {
 		const datePart = isoLike ? isoLike.split("T")[0] : "";
 		const timePart = isoLike ? (isoLike.split("T")[1] || "") : "";
 
-		// Update data attribute when open state changes
+		// Update global state when this picker opens/closes
 		useEffect(() => {
-			const container = document.querySelector(`[data-date-picker-label="${label}"]`);
-			if (container) {
-				container.setAttribute('data-date-picker-open', open.toString());
-			}
-		}, [open, label]);
+			setOpenDatePickers(prev => {
+				const newSet = new Set(prev);
+				open ? newSet.add(label) : newSet.delete(label);
+				return newSet;
+			});
+		}, [label, open]);
 
 		function updateDate(nextDate: string) {
 			if (!nextDate && !timePart) return onChange("");
@@ -590,7 +589,7 @@ export default function TasksPage() {
 		const display = value ? new Date(value).toLocaleString() : `Select ${label}`;
 
 		return (
-			<div className="relative cursor-pointer" onClick={() => setOpen(v => !v)} data-date-picker-label={label}>
+			<div className="relative cursor-pointer" onClick={() => setOpen(v => !v)}>
 				<div className="w-full border rounded px-3 py-2 text-left">
 					<span className="block text-xs text-gray-600">{label}</span>
 					<span>{display}</span>
