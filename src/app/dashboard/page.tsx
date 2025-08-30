@@ -84,17 +84,17 @@ export default function DashboardPage() {
 	const AUTO_REFRESH_SECONDS = 120;
 	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
 
-	// Get current user
-	useEffect(() => {
-		async function getCurrentUser() {
-			const res = await fetch("/api/auth/me");
-			if (res.ok) {
-				const user = await res.json();
-				setCurrentUser(user);
-			}
-		}
-		getCurrentUser();
-	}, []);
+	// Remove the auth check - let the layout handle it
+	// useEffect(() => {
+	// 	async function getCurrentUser() {
+	// 		const res = await fetch("/api/auth/me");
+	// 		if (res.ok) {
+	// 			const user = await res.json();
+	// 			setCurrentUser(user);
+	// 		}
+	// 	}
+	// 	getCurrentUser();
+	// }, []);
 
 	useEffect(() => {
 		async function load() {
