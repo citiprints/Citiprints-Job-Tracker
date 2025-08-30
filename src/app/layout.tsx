@@ -17,6 +17,8 @@ export default function RootLayout({
 	const [theme, setTheme] = useState<"light" | "dark">("light");
 	const [loading, setLoading] = useState(true);
 	const [notificationCounts, setNotificationCounts] = useState<NotificationCounts>({ tasks: 0, quotations: 0 });
+	const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+	const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
 	useEffect(() => {
 		// Check theme from localStorage
@@ -24,6 +26,19 @@ export default function RootLayout({
 		if (savedTheme) {
 			setTheme(savedTheme);
 			document.documentElement.setAttribute("data-theme", savedTheme);
+		}
+
+		// Register service worker for PWA
+		if ('serviceWorker' in navigator) {
+			window.addEventListener('load', () => {
+				navigator.serviceWorker.register('/sw.js')
+					.then((registration) => {
+						console.log('SW registered: ', registration);
+					})
+					.catch((registrationError) => {
+						console.log('SW registration failed: ', registrationError);
+					});
+			});
 		}
 
 		// Check if user is logged in
@@ -58,14 +73,37 @@ export default function RootLayout({
 			}
 		};
 
+		// Handle PWA install prompt
+		const handleBeforeInstallPrompt = (e: any) => {
+			// Prevent the mini-infobar from appearing on mobile
+			e.preventDefault();
+			// Stash the event so it can be triggered later
+			setDeferredPrompt(e);
+			// Show the install prompt after a delay
+			setTimeout(() => {
+				setShowInstallPrompt(true);
+			}, 3000);
+		};
+
+		// Handle successful installation
+		const handleAppInstalled = () => {
+			setShowInstallPrompt(false);
+			setDeferredPrompt(null);
+			console.log('PWA was installed');
+		};
+
 		window.addEventListener('storage', handleStorageChange);
 		window.addEventListener('focus', checkAuth);
 		window.addEventListener('dataChanged', handleDataChange);
+		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+		window.addEventListener('appinstalled', handleAppInstalled);
 
 		return () => {
 			window.removeEventListener('storage', handleStorageChange);
 			window.removeEventListener('focus', checkAuth);
 			window.removeEventListener('dataChanged', handleDataChange);
+			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+			window.removeEventListener('appinstalled', handleAppInstalled);
 		};
 	}, [user]);
 
@@ -103,9 +141,45 @@ export default function RootLayout({
 		document.documentElement.setAttribute("data-theme", newTheme);
 	};
 
+	const handleInstallClick = async () => {
+		if (!deferredPrompt) return;
+		
+		// Show the install prompt
+		deferredPrompt.prompt();
+		
+		// Wait for the user to respond to the prompt
+		const { outcome } = await deferredPrompt.userChoice;
+		
+		if (outcome === 'accepted') {
+			console.log('User accepted the install prompt');
+		} else {
+			console.log('User dismissed the install prompt');
+		}
+		
+		// Clear the deferredPrompt
+		setDeferredPrompt(null);
+		setShowInstallPrompt(false);
+	};
+
+	const dismissInstallPrompt = () => {
+		setShowInstallPrompt(false);
+		// Don't show again for this session
+		localStorage.setItem('installPromptDismissed', 'true');
+	};
+
 	return (
 		<html lang="en" data-theme={theme}>
 			<head>
+				<meta name="viewport" content="width=device-width, initial-scale=1" />
+				<meta name="description" content="Task management and job tracking for Citiprints" />
+				<meta name="theme-color" content="#2563eb" />
+				<meta name="apple-mobile-web-app-capable" content="yes" />
+				<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+				<meta name="apple-mobile-web-app-title" content="Citiprints" />
+				<link rel="manifest" href="/manifest.json" />
+				<link rel="apple-touch-icon" href="/icon-192.png" />
+				<link rel="icon" type="image/png" sizes="32x32" href="/icon-192.png" />
+				<link rel="icon" type="image/png" sizes="16x16" href="/icon-192.png" />
 				<script
 					dangerouslySetInnerHTML={{
 						__html: `
@@ -117,70 +191,98 @@ export default function RootLayout({
 					}}
 				/>
 			</head>
-			<body className="min-h-screen bg-background text-foreground">
-				<header className="border-b">
-					<div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-						<Link href="/" className="text-xl font-bold">
-							Citiprints Job Tracker
-						</Link>
-						<nav className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto text-sm sm:text-base">
-							{user ? (
-								<>
-									<Link href="/dashboard" className="px-2 py-1 rounded border">Dashboard</Link>
-									<Link href="/tasks" className="px-2 py-1 rounded border relative">
-										Tasks
-										{notificationCounts.tasks > 0 && (
-											<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-												{notificationCounts.tasks > 99 ? '99+' : notificationCounts.tasks}
-											</span>
+			<body className="min-h-screen bg-gray-50">
+				<header className="bg-white shadow-sm border-b">
+					<div className="container mx-auto px-4 py-3">
+						<div className="flex flex-wrap items-center justify-between gap-4">
+							<Link href="/" className="text-xl font-bold">
+								Citiprints Job Tracker
+							</Link>
+							
+							<nav className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto text-sm sm:text-base">
+								{user ? (
+									<>
+										<Link href="/dashboard" className="px-2 py-1 rounded border">Dashboard</Link>
+										<Link href="/tasks" className="px-2 py-1 rounded border relative">
+											Tasks
+											{notificationCounts.tasks > 0 && (
+												<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+													{notificationCounts.tasks > 99 ? '99+' : notificationCounts.tasks}
+												</span>
+											)}
+										</Link>
+										<Link href="/archive" className="px-2 py-1 rounded border">Archive</Link>
+										<Link href="/quotations" className="px-2 py-1 rounded border relative">
+											Quotations
+											{notificationCounts.quotations > 0 && (
+												<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+													{notificationCounts.quotations > 99 ? '99+' : notificationCounts.quotations}
+												</span>
+											)}
+										</Link>
+										<Link href="/customers" className="px-2 py-1 rounded border">Customers</Link>
+										<Link href="/custom-fields" className="px-2 py-1 rounded border">Custom fields</Link>
+										<Link href="/files" className="px-2 py-1 rounded border">Files</Link>
+										{user.role === "ADMIN" && (
+											<Link href="/users" className="px-2 py-1 rounded border">Users</Link>
 										)}
-									</Link>
-									<Link href="/archive" className="px-2 py-1 rounded border">Archive</Link>
-									<Link href="/quotations" className="px-2 py-1 rounded border relative">
-										Quotations
-										{notificationCounts.quotations > 0 && (
-											<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-												{notificationCounts.quotations > 99 ? '99+' : notificationCounts.quotations}
-											</span>
-										)}
-									</Link>
-									<Link href="/customers" className="px-2 py-1 rounded border">Customers</Link>
-									<Link href="/custom-fields" className="px-2 py-1 rounded border">Custom fields</Link>
-									<Link href="/files" className="px-2 py-1 rounded border">Files</Link>
-									{user.role === "ADMIN" && (
-										<Link href="/users" className="px-2 py-1 rounded border">Users</Link>
-									)}
-									<span className="px-2 py-1 rounded border max-w-[40vw] truncate">{user.name}</span>
-									<button
-										onClick={toggleTheme}
-										className="px-2 py-1 rounded border"
-									>
-										{theme === "light" ? "🌙" : "☀️"}
-									</button>
-									<form action="/api/auth/logout" method="post">
-										<button type="submit" className="px-2 py-1 rounded border">
-											Logout
+										<button
+											onClick={toggleTheme}
+											className="px-2 py-1 rounded border"
+										>
+											{theme === "light" ? "🌙" : "☀️"}
 										</button>
-									</form>
-								</>
-							) : (
-								<>
-									<Link href="/signin" className="px-2 py-1 rounded border">Sign in</Link>
-									<Link href="/signup" className="px-2 py-1 rounded border">Sign up</Link>
-									<button
-										onClick={toggleTheme}
-										className="px-2 py-1 rounded border"
-									>
-										{theme === "light" ? "🌙" : "☀️"}
-									</button>
-								</>
-							)}
-						</nav>
+										<Link href="/api/auth/logout" className="px-2 py-1 rounded border bg-red-50 text-red-700 hover:bg-red-100">
+											Logout
+										</Link>
+									</>
+								) : (
+									<>
+										<Link href="/signin" className="px-2 py-1 rounded border">Sign in</Link>
+										<Link href="/signup" className="px-2 py-1 rounded border bg-blue-600 text-white hover:bg-blue-700">
+											Sign up
+										</Link>
+									</>
+								)}
+							</nav>
+						</div>
 					</div>
 				</header>
+
 				<main className="container mx-auto px-4 py-8">
 					{children}
 				</main>
+
+				{/* Install Prompt */}
+				{showInstallPrompt && (
+					<div className="fixed bottom-4 left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
+						<div className="flex items-center justify-between">
+							<div className="flex items-center space-x-3">
+								<div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+									<span className="text-white text-xl">📱</span>
+								</div>
+								<div>
+									<h3 className="font-semibold text-gray-900">Install App</h3>
+									<p className="text-sm text-gray-600">Add to home screen for quick access</p>
+								</div>
+							</div>
+							<div className="flex space-x-2">
+								<button
+									onClick={handleInstallClick}
+									className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+								>
+									Install
+								</button>
+								<button
+									onClick={dismissInstallPrompt}
+									className="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm"
+								>
+									✕
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
 			</body>
 		</html>
 	);
