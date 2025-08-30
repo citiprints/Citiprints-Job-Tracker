@@ -44,7 +44,7 @@ export async function GET(
 		const task = await prisma.task.findUnique({
 			where: { id },
 			include: {
-				customer: true,
+				customerRef: true,
 				assignments: {
 					include: {
 						user: true,
@@ -91,7 +91,7 @@ export async function PATCH(
 			where: { id },
 			data: validatedData,
 			include: {
-				customer: true,
+				customerRef: true,
 				assignments: {
 					include: {
 						user: true,
@@ -135,13 +135,17 @@ export async function DELETE(
 		if (task.attachments && task.attachments.length > 0) {
 			const deletePromises = task.attachments.map(async (attachment) => {
 				try {
+					// Extract the key from the URL (assuming URL format: /api/files/key)
+					const urlParts = attachment.url.split('/');
+					const key = urlParts[urlParts.length - 1];
+					
 					const deleteCommand = new DeleteObjectCommand({
 						Bucket: R2_BUCKET,
-						Key: attachment.key,
+						Key: decodeURIComponent(key),
 					});
 					await s3Client.send(deleteCommand);
 				} catch (error) {
-					console.error(`Failed to delete file ${attachment.key}:`, error);
+					console.error(`Failed to delete file ${attachment.url}:`, error);
 				}
 			});
 
