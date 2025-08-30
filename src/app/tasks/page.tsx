@@ -623,6 +623,60 @@ export default function TasksPage() {
 		);
 	}
 
+	async function deleteTask(id: string) {
+		if (!confirm("Are you sure you want to delete this task?")) return;
+		
+		try {
+			const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+			if (res.ok) {
+				setTasks(prev => prev.filter(t => t.id !== id));
+				setError(null);
+			} else {
+				const errorData = await res.json();
+				setError(errorData.error || "Failed to delete task");
+			}
+		} catch (err) {
+			setError("Failed to delete task");
+		}
+	}
+
+	async function duplicateTask(task: Task) {
+		try {
+			// Create a copy of the task with "(Copy)" appended to title
+			const duplicatedTask = {
+				...task,
+				title: `${task.title} (Copy)`,
+				status: "TODO", // Reset status to TODO
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString()
+			};
+			
+			// Remove the id so a new one is generated
+			delete (duplicatedTask as any).id;
+			
+			const res = await fetch("/api/tasks", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(duplicatedTask)
+			});
+			
+			if (res.ok) {
+				const { task: newTask } = await res.json();
+				setTasks(prev => [...prev, {
+					...newTask,
+					subtasks: newTask.subtasks ?? [],
+					customFields: typeof newTask.customFields === "string" ? (() => { try { return JSON.parse(newTask.customFields); } catch { return {}; } })() : (newTask.customFields || {})
+				}]);
+				setError(null);
+			} else {
+				const errorData = await res.json();
+				setError(errorData.error || "Failed to duplicate task");
+			}
+		} catch (err) {
+			setError("Failed to duplicate task");
+		}
+	}
+
 	return (
 		<div className="grid gap-6 sm:grid-cols-2">
 			<section className="relative">
@@ -1952,6 +2006,13 @@ export default function TasksPage() {
 											}}
 										>
 											Edit
+										</button>
+										<button
+											type="button"
+											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+											onClick={() => duplicateTask(t)}
+										>
+											Duplicate
 										</button>
 										<button
 											type="button"

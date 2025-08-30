@@ -96,29 +96,63 @@ export default function DashboardPage() {
 		getCurrentUser();
 	}, []);
 
+	async function duplicateTask(task: Task) {
+		try {
+			// Create a copy of the task with "(Copy)" appended to title
+			const duplicatedTask = {
+				...task,
+				title: `${task.title} (Copy)`,
+				status: "TODO", // Reset status to TODO
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString()
+			};
+			
+			// Remove the id so a new one is generated
+			delete (duplicatedTask as any).id;
+			
+			const res = await fetch("/api/tasks", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(duplicatedTask)
+			});
+			
+			if (res.ok) {
+				const { task: newTask } = await res.json();
+				setTasks(prev => [...prev, {
+					...newTask,
+					subtasks: newTask.subtasks ?? [],
+					customFields: typeof newTask.customFields === "string" ? (() => { try { return JSON.parse(newTask.customFields); } catch { return {}; } })() : (newTask.customFields || {})
+				}]);
+			}
+		} catch (err) {
+			console.error("Failed to duplicate task:", err);
+		}
+	}
+
 	useEffect(() => {
 		async function load() {
 			setLoading(true);
 			try {
 				const res = await fetch("/api/tasks");
 				if (res.ok) {
-				const json = await res.json();
+					const json = await res.json();
 					const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
 						...t,
-						// use subtasks already included by API
+						// server already includes subtasks
 						subtasks: t.subtasks ?? [],
 						customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
 					}));
-					// Filter out archived tasks from dashboard
-				const activeTasks = loaded.filter(task => task.status !== "ARCHIVED");
-				setTasks(activeTasks);
+					// Filter out archived tasks from main list
+					const activeTasks = loaded.filter(task => task.status !== "ARCHIVED");
+					setTasks(activeTasks);
 				}
 			} catch (error) {
-				console.error("Failed to load tasks:", error);
+				console.error("Failed to load data:", error);
 			} finally {
 				setLoading(false);
 			}
 		}
+
 		load();
 	}, []);
 
@@ -543,6 +577,24 @@ export default function DashboardPage() {
 										</div>
 									</div>
 								)}
+
+								{/* Action Buttons */}
+								<div className="flex gap-2 mt-6 pt-4 border-t border-gray-200">
+									<button
+										type="button"
+										className="text-xs px-3 py-2 rounded border hover:bg-gray-50"
+										onClick={() => duplicateTask(task)}
+									>
+										Duplicate Task
+									</button>
+									<button
+										type="button"
+										className="text-xs px-3 py-2 rounded border hover:bg-gray-50 ml-auto"
+										onClick={() => setViewingId(null)}
+									>
+										Close
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
