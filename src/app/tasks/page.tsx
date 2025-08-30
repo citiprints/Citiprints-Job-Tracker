@@ -1,6 +1,8 @@
-// FORCE REBUILD - Redeploy with updated environment variables
+// FORCE REBUILD - Loading animations added
 "use client";
 import React, { useEffect, useState } from "react";
+import { getCurrentUser } from "@/lib/session";
+import { redirect } from "next/navigation";
 
 type Task = {
 	id: string;
@@ -558,11 +560,7 @@ export default function TasksPage() {
 					key={`d-${d}`}
 					type="button"
 					className={`px-2 py-1 rounded text-sm ${selected ? "bg-gray-900 text-white" : "hover:bg-gray-100"}`}
-					onClick={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						updateDate(ymd);
-					}}
+					onClick={() => updateDate(ymd)}
 				>
 					{d}
 				</button>
@@ -576,57 +574,17 @@ export default function TasksPage() {
 		const display = value ? new Date(value).toLocaleString() : `Select ${label}`;
 
 		return (
-			<div className="relative">
-				<div className="block text-xs text-gray-600 mb-1">{label}</div>
-				<div 
-					className="w-full border rounded px-3 py-2 text-left cursor-pointer" 
-					onClick={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						setOpen(v => !v);
-					}}
-					role="button"
-					tabIndex={0}
-					aria-label={`Select ${label} date and time`}
-					onKeyDown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							setOpen(v => !v);
-						}
-					}}
-				>
+			<div className="relative cursor-pointer" onClick={() => setOpen(v => !v)}>
+				<div className="w-full border rounded px-3 py-2 text-left">
+					<span className="block text-xs text-gray-600">{label}</span>
 					<span>{display}</span>
 				</div>
 				{open && (
-					<div 
-						className="absolute z-10 mt-1 w-72 rounded border bg-white p-3 shadow" 
-						onClick={(e) => e.stopPropagation()}
-						onMouseDown={(e) => e.stopPropagation()}
-					>
+					<div className="absolute z-10 mt-1 w-72 rounded border bg-white p-3 shadow" onClick={(e) => e.stopPropagation()}>
 						<div className="flex items-center justify-between mb-2">
-							<button 
-								type="button" 
-								className="px-2 py-1 rounded border" 
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1));
-								}}
-							>
-								{"<"}
-							</button>
+							<button type="button" className="px-2 py-1 rounded border" onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))}>{"<"}</button>
 							<div className="text-sm font-medium">{monthCursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</div>
-							<button 
-								type="button" 
-								className="px-2 py-1 rounded border" 
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1));
-								}}
-							>
-								{">"}
-							</button>
+							<button type="button" className="px-2 py-1 rounded border" onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))}>{">"}</button>
 						</div>
 						<div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-600 mb-1">
 							<div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
@@ -635,91 +593,24 @@ export default function TasksPage() {
 							{dayButtons}
 						</div>
 						<div className="flex items-center gap-2">
-							<select 
-								className="border rounded px-2 py-1 text-sm" 
-								value={hour} 
-								onChange={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									updateTime(`${e.target.value || "00"}:${minute || "00"}`);
-								}}
-							>
+							<select className="border rounded px-2 py-1 text-sm" value={hour} onChange={e => updateTime(`${e.target.value || "00"}:${minute || "00"}`)}>
 								<option value="">HH</option>
 								{Array.from({length:24}).map((_,h) => {
 									const hv = `${h}`.padStart(2, "0");
 									return <option key={hv} value={hv}>{hv}</option>;
 								})}
 							</select>
-							<select 
-								className="border rounded px-2 py-1 text-sm" 
-								value={minute} 
-								onChange={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									updateTime(`${hour || "00"}:${e.target.value}`);
-								}}
-							>
+							<select className="border rounded px-2 py-1 text-sm" value={minute} onChange={e => updateTime(`${hour || "00"}:${e.target.value}`)}>
 								<option value="">MM</option>
 								{minuteOptions.map(m => <option key={m} value={m}>{m}</option>)}
 							</select>
-							<button 
-								type="button" 
-								className="ml-auto text-sm px-2 py-1" 
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									onChange("");
-									setOpen(false);
-								}}
-							>
-								Clear
-							</button>
-							<button 
-								type="button" 
-								className="text-sm px-2 py-1 rounded bg-gray-900 text-white" 
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									setOpen(false);
-								}}
-							>
-								Done
-							</button>
+							<button type="button" className="ml-auto text-sm px-2 py-1" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
+							<button type="button" className="text-sm px-2 py-1 rounded bg-gray-900 text-white" onClick={() => setOpen(false)}>Done</button>
 						</div>
 					</div>
 				)}
 			</div>
 		);
-	}
-
-	async function duplicateTask(task: Task) {
-		try {
-			const duplicateData = {
-				title: `${task.title} (Copy)`,
-				description: task.description,
-				status: "TODO" as const, // Always start as TODO
-				priority: task.priority,
-				customerId: task.customerId,
-				customFields: task.customFields,
-				assignments: task.assignments?.map(a => ({ userId: a.user.id, role: a.role })) || []
-				// Omitting startAt and dueAt to reset them to null in the database
-			};
-
-			const res = await fetch("/api/tasks", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(duplicateData)
-			});
-
-			if (res.ok) {
-				load();
-			} else {
-				const errorData = await res.json();
-				setError(errorData.error || "Failed to duplicate task");
-			}
-		} catch (error) {
-			setError("Failed to duplicate task");
-		}
 	}
 
 	return (
@@ -734,7 +625,7 @@ export default function TasksPage() {
 				)}
 				<h1 className="text-xl font-semibold mb-3">Create task</h1>
 				<form onSubmit={onCreate} className="space-y-3">
-					<input className="w-full border rounded px-3 py-2" placeholder="Title *" value={title} onChange={e => setTitle(e.target.value)} required />
+					<input className="w-full border rounded px-3 py-2" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} required />
 					<textarea className="w-full border rounded px-3 py-2" placeholder="Description" value={desc} onChange={e => setDesc(e.target.value)} />
 					{showNewCustomerForm ? (
 						<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
@@ -1218,47 +1109,18 @@ export default function TasksPage() {
 					<div className="space-y-2">
 						{fields.map(f => (
 							<div key={f.id} className="text-sm">
-								<label htmlFor={`field-${f.key}`} className="block mb-1">{f.label}{f.required ? " *" : ""}</label>
+								<label className="block mb-1">{f.label}</label>
 								{f.type === "TEXT" && (
-									<input 
-										id={`field-${f.key}`}
-										name={`field-${f.key}`}
-										className="w-full border rounded px-3 py-2" 
-										value={custom[f.key] ?? ""} 
-										onChange={e => setCustom({ ...custom, [f.key]: e.target.value })} 
-									/>
+									<input className="w-full border rounded px-3 py-2" value={custom[f.key] ?? ""} onChange={e => setCustom({ ...custom, [f.key]: e.target.value })} />
 								)}
 								{f.type === "NUMBER" && (
-									<input 
-										id={`field-${f.key}`}
-										name={`field-${f.key}`}
-										type="number" 
-										className="w-full border rounded px-3 py-2" 
-										value={custom[f.key] ?? ""} 
-										onChange={e => setCustom({ ...custom, [f.key]: e.target.valueAsNumber })} 
-									/>
+									<input type="number" className="w-full border rounded px-3 py-2" value={custom[f.key] ?? ""} onChange={e => setCustom({ ...custom, [f.key]: e.target.valueAsNumber })} />
 								)}
 								{f.type === "DATE" && (
-									<input 
-										id={`field-${f.key}`}
-										name={`field-${f.key}`}
-										type="date" 
-										className="w-full border rounded px-3 py-2" 
-										value={custom[f.key] ?? ""} 
-										onChange={e => setCustom({ ...custom, [f.key]: e.target.value })} 
-									/>
+									<input type="date" className="w-full border rounded px-3 py-2" value={custom[f.key] ?? ""} onChange={e => setCustom({ ...custom, [f.key]: e.target.value })} />
 								)}
 								{f.type === "BOOLEAN" && (
-									<label className="flex items-center gap-2">
-										<input 
-											id={`field-${f.key}`}
-											name={`field-${f.key}`}
-											type="checkbox" 
-											checked={!!custom[f.key]} 
-											onChange={e => setCustom({ ...custom, [f.key]: e.target.checked })} 
-										/> 
-										{f.label}
-									</label>
+									<label className="flex items-center gap-2"><input type="checkbox" checked={!!custom[f.key]} onChange={e => setCustom({ ...custom, [f.key]: e.target.checked })} /> {f.label}</label>
 								)}
 							</div>
 						))}
@@ -1471,25 +1333,12 @@ export default function TasksPage() {
 								>
 									<div className="grid grid-cols-2 gap-4">
 										<div>
-											<label htmlFor="edit-title" className="block text-sm font-medium mb-1">Title *</label>
-											<input 
-												id="edit-title"
-												name="edit-title"
-												className="w-full border rounded px-3 py-2" 
-												value={editTitle} 
-												onChange={e => setEditTitle(e.target.value)} 
-												required 
-											/>
+											<label className="block text-sm font-medium mb-1">Title</label>
+											<input className="w-full border rounded px-3 py-2" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
 										</div>
 										<div>
-											<label htmlFor="edit-status" className="block text-sm font-medium mb-1">Status</label>
-											<select 
-												id="edit-status"
-												name="edit-status"
-												className="w-full border rounded px-3 py-2" 
-												value={editStatus} 
-												onChange={e => setEditStatus(e.target.value as Task["status"]) }
-											>
+											<label className="block text-sm font-medium mb-1">Status</label>
+																							<select className="w-full border rounded px-3 py-2" value={editStatus} onChange={e => setEditStatus(e.target.value as Task["status"]) }>
 												<option value="TODO">TODO</option>
 												<option value="IN_PROGRESS">IN_PROGRESS</option>
 												<option value="BLOCKED">BLOCKED</option>
@@ -1498,25 +1347,19 @@ export default function TasksPage() {
 												<option value="ARCHIVED">ARCHIVED</option>
 												<option value="CLIENT_TO_REVERT">CLIENT_TO_REVERT</option>
 											</select>
+											</div>
 										</div>
-									</div>
 
-									<div>
-										<label htmlFor="edit-description" className="block text-sm font-medium mb-1">Description</label>
-										<textarea 
-											id="edit-description"
-											name="edit-description"
-											className="w-full border rounded px-3 py-2" 
-											value={editDesc} 
-											onChange={e => setEditDesc(e.target.value)} 
-										/>
-									</div>
-
-									<div className="grid grid-cols-2 gap-4">
 										<div>
-											<label className="block text-sm font-medium mb-1">Customer</label>
-											{showNewCustomerForm ? (
-												<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+											<label className="block text-sm font-medium mb-1">Description</label>
+											<textarea className="w-full border rounded px-3 py-2" value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+										</div>
+
+										<div className="grid grid-cols-2 gap-4">
+											<div>
+												<label className="block text-sm font-medium mb-1">Customer</label>
+												{showNewCustomerForm ? (
+													<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
 							<div className="flex items-center justify-between">
 														<h3 className="font-medium text-sm">Add New Customer</h3>
 														<button
@@ -2110,13 +1953,6 @@ export default function TasksPage() {
 										<button
 											type="button"
 											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
-											onClick={() => duplicateTask(t)}
-										>
-											Duplicate
-										</button>
-										<button
-											type="button"
-											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
 											onClick={async () => {
 												if (!confirm("Delete this task?")) return;
 												await fetch(`/api/tasks/${t.id}`, { method: "DELETE" });
@@ -2151,7 +1987,7 @@ export default function TasksPage() {
 											>
 												<div className="grid grid-cols-2 gap-3">
 													<div>
-														<label className="block text-xs font-medium mb-1">Title *</label>
+														<label className="block text-xs font-medium mb-1">Title</label>
 														<input
 															type="text"
 															className="w-full border rounded px-2 py-1 text-sm"
@@ -2235,7 +2071,7 @@ export default function TasksPage() {
 															>
 																<div className="grid grid-cols-2 gap-3">
 																	<div>
-																		<label className="block text-xs font-medium mb-1">Title *</label>
+																		<label className="block text-xs font-medium mb-1">Title</label>
 																		<input
 																			type="text"
 																			className="w-full border rounded px-2 py-1 text-sm"

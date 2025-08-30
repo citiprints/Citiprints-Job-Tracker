@@ -55,7 +55,7 @@ export default function CustomersPage() {
             <section>
                 <h1 className="text-xl font-semibold mb-3">Add customer</h1>
                 <form onSubmit={onCreate} className="space-y-3">
-                    <input className="w-full border rounded px-3 py-2" placeholder="Name *" value={name} onChange={e => setName(e.target.value)} required />
+                    <input className="w-full border rounded px-3 py-2" placeholder="Name" value={name} onChange={e => setName(e.target.value)} required />
                     <input className="w-full border rounded px-3 py-2" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
                     <input className="w-full border rounded px-3 py-2" placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
                     <input className="w-full border rounded px-3 py-2" placeholder="Company" value={company} onChange={e => setCompany(e.target.value)} />
@@ -83,7 +83,7 @@ export default function CustomersPage() {
                                     }}
                                     className="space-y-2"
                                 >
-                                    <input className="w-full border rounded px-3 py-2" value={eName} onChange={e => setEName(e.target.value)} required placeholder="Name *" />
+                                    <input className="w-full border rounded px-3 py-2" value={eName} onChange={e => setEName(e.target.value)} required />
                                     <input className="w-full border rounded px-3 py-2" value={eEmail} onChange={e => setEEmail(e.target.value)} />
                                     <input className="w-full border rounded px-3 py-2" value={ePhone} onChange={e => setEPhone(e.target.value)} />
                                     <input className="w-full border rounded px-3 py-2" value={eCompany} onChange={e => setECompany(e.target.value)} />
