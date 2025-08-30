@@ -68,13 +68,13 @@ export async function PATCH(
 		// Update assignment if assigneeId is provided
 		if (data.assigneeId !== undefined) {
 			// Delete existing assignments
-			await prisma.assignment.deleteMany({
+			await prisma.quotationAssignment.deleteMany({
 				where: { quotationId: id }
 			});
 			
 			// Create new assignment if assigneeId is provided
 			if (data.assigneeId) {
-				await prisma.assignment.create({
+				await prisma.quotationAssignment.create({
 					data: {
 						quotationId: id,
 						userId: data.assigneeId,
@@ -110,12 +110,12 @@ export async function DELETE(
 	
 	try {
 		// Delete assignments first
-		await prisma.assignment.deleteMany({
+		await prisma.quotationAssignment.deleteMany({
 			where: { quotationId: id }
 		});
 		
 		// Delete subtasks
-		await prisma.subtask.deleteMany({
+		await prisma.quotationSubtask.deleteMany({
 			where: { quotationId: id }
 		});
 		

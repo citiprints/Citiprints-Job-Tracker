@@ -111,7 +111,7 @@ export async function POST(request: Request) {
 
 		// Create assignment if assigneeId is provided
 		if (data.assigneeId) {
-			await prisma.assignment.create({
+			await prisma.quotationAssignment.create({
 				data: {
 					quotationId: quotation.id,
 					userId: data.assigneeId,
