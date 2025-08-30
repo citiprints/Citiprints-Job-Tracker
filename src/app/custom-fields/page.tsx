@@ -57,11 +57,15 @@ export default function CustomFieldsPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [editingId, setEditingId] = useState<string | null>(null);
-	const [editKey, setEditKey] = useState("");
 	const [editLabel, setEditLabel] = useState("");
-	const [editType, setEditType] = useState("");
+	const [editType, setEditType] = useState("TEXT");
 	const [editRequired, setEditRequired] = useState(false);
 	const [editOrder, setEditOrder] = useState(0);
+	const [keyv, setKeyv] = useState("");
+	const [label, setLabel] = useState("");
+	const [type, setType] = useState("TEXT");
+	const [required, setRequired] = useState(false);
+	const [order, setOrder] = useState(0);
 
 	// Check authentication
 	useEffect(() => {
@@ -115,11 +119,7 @@ export default function CustomFieldsPage() {
 		}
 	}
 
-	const [editingId, setEditingId] = useState<string | null>(null);
-	const [eLabel, setELabel] = useState("");
-	const [eType, setEType] = useState("TEXT");
-	const [eRequired, setERequired] = useState(false);
-	const [eOrder, setEOrder] = useState(0);
+
 
 	return (
 		<div className="grid gap-6 sm:grid-cols-2">
@@ -156,7 +156,7 @@ export default function CustomFieldsPage() {
 											await fetch(`/api/custom-fields/${f.id}`, {
 												method: "PATCH",
 												headers: { "Content-Type": "application/json" },
-												body: JSON.stringify({ label: eLabel, type: eType, required: eRequired, order: eOrder })
+												body: JSON.stringify({ label: editLabel, type: editType, required: editRequired, order: editOrder })
 											});
 											setEditingId(null);
 											load();
@@ -164,18 +164,18 @@ export default function CustomFieldsPage() {
 										className="grid gap-2 sm:grid-cols-2"
 									>
 										<div className="sm:col-span-2">
-											<input className="w-full border rounded px-3 py-2" value={eLabel} onChange={e => setELabel(e.target.value)} required />
+											<input className="w-full border rounded px-3 py-2" value={editLabel} onChange={e => setEditLabel(e.target.value)} required />
 										</div>
-										<select className="w-full border rounded px-3 py-2" value={eType} onChange={e => setEType(e.target.value)}>
+										<select className="w-full border rounded px-3 py-2" value={editType} onChange={e => setEditType(e.target.value)}>
 											<option>TEXT</option>
 											<option>NUMBER</option>
 											<option>DATE</option>
 											<option>BOOLEAN</option>
 										</select>
 										<label className="flex items-center gap-2 text-sm">
-											<input type="checkbox" checked={eRequired} onChange={e => setERequired(e.target.checked)} /> Required
+											<input type="checkbox" checked={editRequired} onChange={e => setEditRequired(e.target.checked)} /> Required
 										</label>
-										<input className="w-full border rounded px-3 py-2" type="number" value={eOrder} onChange={e => setEOrder(parseInt(e.target.value || "0"))} />
+										<input className="w-full border rounded px-3 py-2" type="number" value={editOrder} onChange={e => setEditOrder(parseInt(e.target.value || "0"))} />
 										<div className="sm:col-span-2 flex gap-2">
 											<button className="btn rounded px-3 py-2" type="submit">Save</button>
 											<button className="rounded border px-3 py-2" type="button" onClick={() => setEditingId(null)}>Cancel</button>
@@ -190,10 +190,10 @@ export default function CustomFieldsPage() {
 										<div className="flex gap-2">
 											<button className="rounded border px-3 py-2" onClick={() => {
 												setEditingId(f.id);
-												setELabel(f.label);
-												setEType(f.type);
-												setERequired(f.required);
-												setEOrder(f.order);
+												setEditLabel(f.label);
+												setEditType(f.type);
+												setEditRequired(f.required);
+												setEditOrder(f.order);
 											}}>Edit</button>
 											<button className="rounded border px-3 py-2" onClick={async () => {
 												if (confirm("Delete this field?")) {
