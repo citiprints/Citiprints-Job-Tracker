@@ -25,8 +25,8 @@ export default function SignInPage() {
       return;
     }
     
-    // Redirect to signin page after successful login
-    window.location.href = "/signin";
+    // Redirect to auth verification page after successful login
+    window.location.href = "/authverification";
   }
 
   return (
