@@ -495,7 +495,7 @@ export default function QuotationsPage() {
 											{field.label}
 											{field.required && <span className="text-red-500"> *</span>}
 										</label>
-										{field.type === "text" && (
+										{field.type === "TEXT" && (
 											<input 
 												type="text" 
 												className="w-full border rounded px-3 py-2" 
@@ -504,7 +504,7 @@ export default function QuotationsPage() {
 												required={field.required}
 											/>
 										)}
-										{field.type === "number" && (
+										{field.type === "NUMBER" && (
 											<input 
 												type="number" 
 												className="w-full border rounded px-3 py-2" 
@@ -513,7 +513,16 @@ export default function QuotationsPage() {
 												required={field.required}
 											/>
 										)}
-										{field.type === "select" && (
+										{field.type === "DATE" && (
+											<input 
+												type="date" 
+												className="w-full border rounded px-3 py-2" 
+												value={custom[field.key] || ""} 
+												onChange={e => setCustom(prev => ({ ...prev, [field.key]: e.target.value }))}
+												required={field.required}
+											/>
+										)}
+										{field.type === "BOOLEAN" && (
 											<select 
 												className="w-full border rounded px-3 py-2" 
 												value={custom[field.key] || ""} 
@@ -521,9 +530,8 @@ export default function QuotationsPage() {
 												required={field.required}
 											>
 												<option value="">Select {field.label}</option>
-												{field.options?.map((option: string) => (
-													<option key={option} value={option}>{option}</option>
-												))}
+												<option value="true">Yes</option>
+												<option value="false">No</option>
 											</select>
 										)}
 									</div>
