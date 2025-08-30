@@ -19,9 +19,17 @@ export default function RootLayout({
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [theme, setTheme] = useState<"light" | "dark">("light");
+	const [mounted, setMounted] = useState(false);
+
+	// Set mounted to true after hydration
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	// Simple auth check - this is the one that works when you click Sign In
 	useEffect(() => {
+		if (!mounted) return; // Don't run auth check until after hydration
+		
 		console.log('🔄 Layout mounted, checking auth...');
 		
 		const checkAuth = async () => {
@@ -53,7 +61,7 @@ export default function RootLayout({
 		}, 100);
 
 		return () => clearTimeout(timer);
-	}, []);
+	}, [mounted]);
 
 	// Simple logout
 	const handleLogout = async () => {
@@ -81,7 +89,43 @@ export default function RootLayout({
 		document.documentElement.setAttribute("data-theme", newTheme);
 	};
 
-	console.log('🎨 Rendering layout - user:', user?.name, 'loading:', loading);
+	console.log('🎨 Rendering layout - user:', user?.name, 'loading:', loading, 'mounted:', mounted);
+
+	// Don't render navigation until after hydration to prevent mismatch
+	if (!mounted) {
+		return (
+			<html lang="en" data-theme={theme}>
+				<head>
+					<meta name="viewport" content="width=device-width, initial-scale=1" />
+					<meta name="description" content="Citiprints Job Tracker" />
+					<meta name="theme-color" content="#000000" />
+					<link rel="manifest" href="/manifest.json" />
+					<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+					<link rel="shortcut icon" href="/favicon.png" />
+				</head>
+				<body className="min-h-screen bg-background text-foreground">
+					<div className="flex flex-col min-h-screen">
+						<header className="border-b bg-background/95 backdrop-blur">
+							<div className="container mx-auto px-4 py-3">
+								<div className="flex items-center justify-between">
+									<Link href="/" className="text-xl font-bold">
+										Citiprints Job Tracker
+									</Link>
+									<div className="flex items-center gap-2 text-sm text-gray-500">
+										<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+										<span>Loading...</span>
+									</div>
+								</div>
+							</div>
+						</header>
+						<main className="flex-1 container mx-auto px-4 py-6">
+							{children}
+						</main>
+					</div>
+				</body>
+			</html>
+		);
+	}
 
 	return (
 		<html lang="en" data-theme={theme}>
