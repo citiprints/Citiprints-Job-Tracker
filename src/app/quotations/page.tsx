@@ -44,6 +44,21 @@ function QuotationsSkeleton() {
 // DateTimeSelector component for convert form
 function DateTimeSelector({ label, value, onChange }: { label: string; value: string; onChange: (next: string) => void }) {
 	const [open, setOpen] = useState(false);
+	
+	// Handle click outside to close picker
+	useEffect(() => {
+		if (!open) return;
+		
+		const handleClickOutside = (event: MouseEvent) => {
+			const target = event.target as Element;
+			if (!target.closest('.date-time-selector')) {
+				setOpen(false);
+			}
+		};
+		
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	}, [open]);
 	const isoLike = value; // "YYYY-MM-DDTHH:MM"
 	const datePart = isoLike ? isoLike.split("T")[0] : "";
 	const timePart = isoLike ? (isoLike.split("T")[1] || "") : "";
@@ -95,8 +110,8 @@ function DateTimeSelector({ label, value, onChange }: { label: string; value: st
 	const display = value ? new Date(value).toLocaleString() : `Select ${label}`;
 
 	return (
-		<div className="relative cursor-pointer" onClick={() => setOpen(v => !v)}>
-			<div className="w-full border rounded px-3 py-2 text-left">
+		<div className="relative cursor-pointer date-time-selector">
+			<div className="w-full border rounded px-3 py-2 text-left" onClick={() => setOpen(v => !v)}>
 				<span className="block text-xs text-gray-600">{label}</span>
 				<span>{display}</span>
 			</div>
@@ -511,8 +526,23 @@ export default function QuotationsPage() {
 
 			{/* Edit Quotation Modal */}
 			{editingId && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-					<div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+				<div 
+					className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+					onClick={() => {
+						setEditingId(null);
+						setEditTitle("");
+						setEditDesc("");
+						setEditStatus("TODO");
+						setEditPriority("MEDIUM");
+						setEditCustomerId("");
+						setEditAssigneeId("");
+						setEditCustom({});
+					}}
+				>
+					<div 
+						className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+						onClick={(e) => e.stopPropagation()}
+					>
 						<h2 className="text-xl font-semibold mb-4">Edit Quotation</h2>
 						<div className="space-y-3">
 							<div>
@@ -948,8 +978,18 @@ export default function QuotationsPage() {
 
 			{/* Convert to Task Modal */}
 			{convertingId && (
-				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-					<div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+				<div 
+					className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+					onClick={() => {
+						setConvertingId(null);
+						setConvertStartAt("");
+						setConvertDueAt("");
+					}}
+				>
+					<div 
+						className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+						onClick={(e) => e.stopPropagation()}
+					>
 						<h2 className="text-xl font-semibold mb-4">Convert Quotation to Task</h2>
 						<p className="text-sm text-gray-600 mb-4">Please provide start and due dates for the task:</p>
 						<div className="space-y-3">

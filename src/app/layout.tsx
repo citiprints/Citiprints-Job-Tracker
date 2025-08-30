@@ -187,86 +187,166 @@ export default function RootLayout({
 					{/* Header */}
 					<header className="border-b bg-background/95 backdrop-blur">
 						<div className="container mx-auto px-4 py-3">
-							{/* Top row: Logo and Signed in as */}
-							<div className="flex items-center justify-between mb-3">
+							{/* Desktop Layout */}
+							<div className="hidden md:flex items-center justify-between">
 								{/* Logo */}
 								<Link href="/authverification" className="text-xl font-bold">
 									Citiprints Job Tracker
 								</Link>
 
-								{/* Loading or Signed in as */}
+								{/* Navigation */}
 								{loading ? (
 									<div className="flex items-center gap-2 text-sm text-gray-500">
 										<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
 										<span>Loading...</span>
 									</div>
-								) : user ? (
-									<div className="flex items-center gap-2 text-sm text-gray-600">
-										<span>Signed in as:</span>
-										<span className="font-medium text-gray-800">{user.name}</span>
-									</div>
-								) : null}
+								) : (
+									<nav className="flex items-center gap-4 text-sm">
+										{user ? (
+											<>
+												<div className="flex items-center gap-2 text-gray-600">
+													<span>Signed in as:</span>
+													<span className="font-medium text-gray-800">{user.name}</span>
+												</div>
+												<Link href="/dashboard" className="px-2 py-1 rounded border relative hover:bg-gray-50">
+													Dashboard
+												</Link>
+												<Link href="/tasks" className="px-2 py-1 rounded border relative hover:bg-gray-50">
+													Tasks
+													{notificationCounts.tasks > 0 && (
+														<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center">
+															{notificationCounts.tasks}
+														</span>
+													)}
+												</Link>
+												<Link href="/quotations" className="px-2 py-1 rounded border relative hover:bg-gray-50">
+													Quotations
+													{notificationCounts.quotations > 0 && (
+														<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center">
+															{notificationCounts.quotations}
+														</span>
+													)}
+												</Link>
+												<Link href="/archive" className="px-2 py-1 rounded border hover:bg-gray-50">
+													Archive
+												</Link>
+												<Link href="/custom-fields" className="px-2 py-1 rounded border hover:bg-gray-50">
+													Custom Fields
+												</Link>
+												<Link href="/files" className="px-2 py-1 rounded border hover:bg-gray-50">
+													Files
+												</Link>
+												<button
+													onClick={toggleTheme}
+													className="px-2 py-1 rounded border hover:bg-gray-50"
+												>
+													{theme === "light" ? "🌙" : "☀️"}
+												</button>
+												<button
+													type="button"
+													onClick={handleLogout}
+													className="px-2 py-1 rounded border bg-red-50 text-red-700 hover:bg-red-100"
+												>
+													Logout
+												</button>
+											</>
+										) : (
+											<>
+												<Link href="/signin" className="px-2 py-1 rounded border hover:bg-gray-50">
+													Sign In
+												</Link>
+												<Link href="/signup" className="px-2 py-1 rounded border bg-black text-white hover:bg-gray-800">
+													Sign Up
+												</Link>
+											</>
+										)}
+									</nav>
+								)}
 							</div>
 
-							{/* Navigation menu - only show if not loading */}
-							{!loading && (
-								<nav className="flex flex-wrap items-center gap-2 text-sm">
-									{user ? (
-										<>
-											<Link href="/dashboard" className="px-3 py-2 rounded border relative hover:bg-gray-50">
-												Dashboard
-											</Link>
-											<Link href="/tasks" className="px-3 py-2 rounded border relative hover:bg-gray-50">
-												Tasks
-												{notificationCounts.tasks > 0 && (
-													<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center">
-														{notificationCounts.tasks}
-													</span>
-												)}
-											</Link>
-											<Link href="/quotations" className="px-3 py-2 rounded border relative hover:bg-gray-50">
-												Quotations
-												{notificationCounts.quotations > 0 && (
-													<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center">
-														{notificationCounts.quotations}
-													</span>
-												)}
-											</Link>
-											<Link href="/archive" className="px-3 py-2 rounded border hover:bg-gray-50">
-												Archive
-											</Link>
-											<Link href="/custom-fields" className="px-3 py-2 rounded border hover:bg-gray-50">
-												Custom Fields
-											</Link>
-											<Link href="/files" className="px-3 py-2 rounded border hover:bg-gray-50">
-												Files
-											</Link>
-											<button
-												onClick={toggleTheme}
-												className="px-3 py-2 rounded border hover:bg-gray-50"
-											>
-												{theme === "light" ? "🌙" : "☀️"}
-											</button>
-											<button
-												type="button"
-												onClick={handleLogout}
-												className="px-3 py-2 rounded border bg-red-50 text-red-700 hover:bg-red-100"
-											>
-												Logout
-											</button>
-										</>
-									) : (
-										<>
-											<Link href="/signin" className="px-3 py-2 rounded border hover:bg-gray-50">
-												Sign In
-											</Link>
-											<Link href="/signup" className="px-3 py-2 rounded border bg-black text-white hover:bg-gray-800">
-												Sign Up
-											</Link>
-										</>
-									)}
-								</nav>
-							)}
+							{/* Mobile Layout */}
+							<div className="md:hidden">
+								{/* Top row: Logo and Signed in as */}
+								<div className="flex items-center justify-between mb-3">
+									{/* Logo */}
+									<Link href="/authverification" className="text-xl font-bold">
+										Citiprints Job Tracker
+									</Link>
+
+									{/* Loading or Signed in as */}
+									{loading ? (
+										<div className="flex items-center gap-2 text-sm text-gray-500">
+											<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+											<span>Loading...</span>
+										</div>
+									) : user ? (
+										<div className="flex items-center gap-2 text-sm text-gray-600">
+											<span>Signed in as:</span>
+											<span className="font-medium text-gray-800">{user.name}</span>
+										</div>
+									) : null}
+								</div>
+
+								{/* Navigation menu - only show if not loading */}
+								{!loading && (
+									<nav className="flex flex-wrap items-center gap-2 text-sm">
+										{user ? (
+											<>
+												<Link href="/dashboard" className="px-3 py-2 rounded border relative hover:bg-gray-50">
+													Dashboard
+												</Link>
+												<Link href="/tasks" className="px-3 py-2 rounded border relative hover:bg-gray-50">
+													Tasks
+													{notificationCounts.tasks > 0 && (
+														<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center">
+															{notificationCounts.tasks}
+														</span>
+													)}
+												</Link>
+												<Link href="/quotations" className="px-3 py-2 rounded border relative hover:bg-gray-50">
+													Quotations
+													{notificationCounts.quotations > 0 && (
+														<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center">
+															{notificationCounts.quotations}
+														</span>
+													)}
+												</Link>
+												<Link href="/archive" className="px-3 py-2 rounded border hover:bg-gray-50">
+													Archive
+												</Link>
+												<Link href="/custom-fields" className="px-3 py-2 rounded border hover:bg-gray-50">
+													Custom Fields
+												</Link>
+												<Link href="/files" className="px-3 py-2 rounded border hover:bg-gray-50">
+													Files
+												</Link>
+												<button
+													onClick={toggleTheme}
+													className="px-3 py-2 rounded border hover:bg-gray-50"
+												>
+													{theme === "light" ? "🌙" : "☀️"}
+												</button>
+												<button
+													type="button"
+													onClick={handleLogout}
+													className="px-3 py-2 rounded border bg-red-50 text-red-700 hover:bg-red-100"
+												>
+													Logout
+												</button>
+											</>
+										) : (
+											<>
+												<Link href="/signin" className="px-3 py-2 rounded border hover:bg-gray-50">
+													Sign In
+												</Link>
+												<Link href="/signup" className="px-3 py-2 rounded border bg-black text-white hover:bg-gray-800">
+													Sign Up
+												</Link>
+											</>
+										)}
+									</nav>
+								)}
+							</div>
 						</div>
 					</header>
 
