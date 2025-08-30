@@ -16,6 +16,10 @@ const CreateTaskSchema = z.object({
 	jobNumber: z.string().optional(),
 	customFields: z.any().optional(),
 	assigneeId: z.string().optional(),
+	assignments: z.array(z.object({
+		userId: z.string(),
+		role: z.string().optional()
+	})).optional(),
 });
 
 export async function GET() {
@@ -70,6 +74,17 @@ export async function POST(request: Request) {
 					userId: data.assigneeId,
 					role: "assignee"
 				}
+			});
+		}
+
+		// Create multiple assignments if assignments array is provided
+		if (data.assignments && data.assignments.length > 0) {
+			await prisma.assignment.createMany({
+				data: data.assignments.map(assignment => ({
+					taskId: task.id,
+					userId: assignment.userId,
+					role: assignment.role || "assignee"
+				}))
 			});
 		}
 

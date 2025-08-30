@@ -611,6 +611,37 @@ export default function TasksPage() {
 		);
 	}
 
+	async function duplicateTask(task: Task) {
+		try {
+			const duplicateData = {
+				title: `${task.title} (Copy)`,
+				description: task.description,
+				status: "TODO" as const, // Always start as TODO
+				priority: task.priority,
+				startAt: null, // Reset start time
+				dueAt: null, // Reset due time
+				customerId: task.customerId,
+				customFields: task.customFields,
+				assignments: task.assignments?.map(a => ({ userId: a.user.id, role: a.role })) || []
+			};
+
+			const res = await fetch("/api/tasks", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(duplicateData)
+			});
+
+			if (res.ok) {
+				load();
+			} else {
+				const errorData = await res.json();
+				setError(errorData.error || "Failed to duplicate task");
+			}
+		} catch (error) {
+			setError("Failed to duplicate task");
+		}
+	}
+
 	return (
 		<div className="grid gap-6 sm:grid-cols-2">
 			<section className="relative">
@@ -1947,6 +1978,13 @@ export default function TasksPage() {
 											onClick={() => setViewingId(t.id)}
 										>
 											View
+										</button>
+										<button
+											type="button"
+											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+											onClick={() => duplicateTask(t)}
+										>
+											Duplicate
 										</button>
 										<button
 											type="button"
