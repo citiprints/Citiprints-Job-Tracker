@@ -19,6 +19,7 @@ export default function RootLayout({
 	const [notificationCounts, setNotificationCounts] = useState<NotificationCounts>({ tasks: 0, quotations: 0 });
 	const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 	const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
 
 	useEffect(() => {
 		// Check theme from localStorage
@@ -70,9 +71,12 @@ export default function RootLayout({
 					loadNotificationCounts();
 				} else {
 					setUser(null);
+					setNotificationCounts({ tasks: 0, quotations: 0 });
 				}
 			} catch (error) {
+				console.error('Auth check error:', error);
 				setUser(null);
+				setNotificationCounts({ tasks: 0, quotations: 0 });
 			} finally {
 				setLoading(false);
 			}
@@ -227,6 +231,41 @@ export default function RootLayout({
 		(window as any).debugShowInstallPrompt = debugShowInstallPrompt;
 	}
 
+	const handleLogout = async () => {
+		if (isLoggingOut) return; // Prevent multiple clicks
+		
+		setIsLoggingOut(true);
+		try {
+			const res = await fetch('/api/auth/logout', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			});
+
+			if (res.ok) {
+				// Clear user state immediately
+				setUser(null);
+				// Clear notification counts
+				setNotificationCounts({ tasks: 0, quotations: 0 });
+				// Redirect to home page
+				window.location.href = '/';
+			} else {
+				console.error('Logout failed');
+				// Still clear user state and redirect
+				setUser(null);
+				window.location.href = '/';
+			}
+		} catch (error) {
+			console.error('Logout error:', error);
+			// Still clear user state and redirect
+			setUser(null);
+			window.location.href = '/';
+		} finally {
+			setIsLoggingOut(false);
+		}
+	};
+
 	return (
 		<html lang="en" data-theme={theme}>
 			<head>
@@ -293,9 +332,12 @@ export default function RootLayout({
 										>
 											{theme === "light" ? "🌙" : "☀️"}
 										</button>
-										<Link href="/api/auth/logout" className="px-2 py-1 rounded border bg-red-50 text-red-700 hover:bg-red-100">
-											Logout
-										</Link>
+										<button
+											onClick={handleLogout}
+											className="px-2 py-1 rounded border bg-red-50 text-red-700 hover:bg-red-100"
+										>
+											{isLoggingOut ? 'Logging out...' : 'Logout'}
+										</button>
 									</>
 								) : (
 									<>
