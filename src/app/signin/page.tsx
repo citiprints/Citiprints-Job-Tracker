@@ -25,7 +25,13 @@ export default function SignInPage() {
       return;
     }
     
-    // Simple redirect to dashboard
+    // Trigger auth change event to show loading spinner
+    window.dispatchEvent(new CustomEvent('authChanged'));
+    
+    // Set localStorage to trigger cross-tab sync
+    localStorage.setItem('auth_state', 'logged_in');
+    
+    // Redirect to dashboard
     router.push("/dashboard");
   }
 

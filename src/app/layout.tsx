@@ -23,6 +23,7 @@ export default function RootLayout({
 	// Single auth check on mount
 	useEffect(() => {
 		const checkAuth = async () => {
+			setLoading(true); // Always show loading when checking auth
 			try {
 				const res = await fetch("/api/auth/me");
 				if (res.ok) {
@@ -41,8 +42,50 @@ export default function RootLayout({
 		checkAuth();
 	}, []);
 
+	// Listen for auth state changes
+	useEffect(() => {
+		const handleAuthChange = () => {
+			console.log('🔄 Auth change detected, checking auth...');
+			setLoading(true); // Show loading spinner
+			checkAuth();
+		};
+
+		const checkAuth = async () => {
+			try {
+				const res = await fetch("/api/auth/me");
+				if (res.ok) {
+					const userData = await res.json();
+					setUser(userData);
+				} else {
+					setUser(null);
+				}
+			} catch (error) {
+				setUser(null);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		// Listen for custom auth change events
+		window.addEventListener('authChanged', handleAuthChange);
+		
+		// Listen for storage changes (cross-tab sync)
+		const handleStorageChange = (e: StorageEvent) => {
+			if (e.key === 'auth_state') {
+				handleAuthChange();
+			}
+		};
+		window.addEventListener('storage', handleStorageChange);
+
+		return () => {
+			window.removeEventListener('authChanged', handleAuthChange);
+			window.removeEventListener('storage', handleStorageChange);
+		};
+	}, []);
+
 	// Simple logout
 	const handleLogout = async () => {
+		setLoading(true); // Show loading when logging out
 		try {
 			await fetch('/api/auth/logout', {
 				method: 'POST',
