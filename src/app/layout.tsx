@@ -126,6 +126,7 @@ export default function RootLayout({
 													{theme === "light" ? "🌙" : "☀️"}
 												</button>
 												<button
+													type="button"
 													onClick={handleLogout}
 													className="px-2 py-1 rounded border bg-red-50 text-red-700 hover:bg-red-100"
 												>

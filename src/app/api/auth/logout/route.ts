@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 
+export async function GET() {
+	// Handle accidental GET requests gracefully
+	return NextResponse.json({ error: "Method not allowed. Use POST for logout." }, { status: 405 });
+}
+
 export async function POST() {
 	const cookieStore = await cookies();
 	const sessionId = cookieStore.get("auth_session")?.value;
