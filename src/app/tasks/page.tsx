@@ -219,8 +219,8 @@ export default function TasksPage() {
 				fetch("/api/users")
 			]);
 			
-			if (resTasks.ok) {
-				const json = await resTasks.json();
+		if (resTasks.ok) {
+			const json = await resTasks.json();
 				const loaded: Task[] = (json.tasks ?? []).map((t: any) => ({
 					...t,
 					subtasks: t.subtasks ?? [],
@@ -229,10 +229,10 @@ export default function TasksPage() {
 				setTasks(loaded);
 			}
 			
-			if (resFields.ok) {
-				const json = await resFields.json();
-				setFields(json.fields ?? []);
-			}
+		if (resFields.ok) {
+			const json = await resFields.json();
+			setFields(json.fields ?? []);
+		}
 			
 			if (resCustomers.ok) {
 				const json = await resCustomers.json();

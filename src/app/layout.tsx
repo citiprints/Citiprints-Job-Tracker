@@ -238,8 +238,9 @@ export default function RootLayout({
 				<meta name="apple-mobile-web-app-title" content="Citiprints" />
 				<link rel="manifest" href="/manifest.json" />
 				<link rel="apple-touch-icon" href="/icon-192.png" />
-				<link rel="icon" type="image/png" sizes="32x32" href="/icon-192.png" />
-				<link rel="icon" type="image/png" sizes="16x16" href="/icon-192.png" />
+				<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+				<link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+				<link rel="shortcut icon" href="/favicon.png" />
 				<script
 					dangerouslySetInnerHTML={{
 						__html: `
