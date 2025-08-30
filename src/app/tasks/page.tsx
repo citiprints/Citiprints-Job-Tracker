@@ -2011,13 +2011,6 @@ export default function TasksPage() {
 										<button
 											type="button"
 											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
-											onClick={() => duplicateTask(t)}
-										>
-											Duplicate
-										</button>
-										<button
-											type="button"
-											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
 											onClick={() => setViewingId(t.id)}
 										>
 											View
@@ -2032,6 +2025,20 @@ export default function TasksPage() {
 											}}
 										>
 											Delete
+										</button>
+										<button
+											type="button"
+											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+											onClick={() => setEditingTask(t)}
+										>
+											Edit
+										</button>
+										<button
+											type="button"
+											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+											onClick={() => duplicateTask(t)}
+										>
+											Duplicate
 										</button>
 									</div>
 
