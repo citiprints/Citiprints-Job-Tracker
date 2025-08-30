@@ -248,19 +248,25 @@ export default function TasksPage() {
 		load();
 	}, []);
 
-	// Auto refresh with countdown - TEMPORARILY DISABLED
-	// useEffect(() => {
-	// 	const id = setInterval(() => {
-	// 		setRefreshIn(prev => {
-	// 			if (prev <= 1) {
-	// 				load();
-	// 				return AUTO_REFRESH_SECONDS;
-	// 			}
-	// 			return prev - 1;
-	// 		});
-	// 	}, 1000);
-	// 	return () => clearInterval(id);
-	// }, []);
+	// Auto refresh with countdown - SMART VERSION
+	useEffect(() => {
+		const id = setInterval(() => {
+			setRefreshIn(prev => {
+				if (prev <= 1) {
+					// Only refresh if the page is not in a loading state
+					if (!loading) {
+						load();
+						return AUTO_REFRESH_SECONDS;
+					} else {
+						// If still loading, wait another 30 seconds
+						return 30;
+					}
+				}
+				return prev - 1;
+			});
+		}, 1000);
+		return () => clearInterval(id);
+	}, [loading]);
 
 	// Helper function to check if task is assigned to current user
 	function isAssignedToMe(task: Task): boolean {
@@ -574,15 +580,8 @@ export default function TasksPage() {
 
 		const display = value ? new Date(value).toLocaleString() : `Select ${label}`;
 
-		const handleClick = (e: React.MouseEvent) => {
-			e.preventDefault();
-			e.stopPropagation();
-			console.log('Date picker clicked, current open state:', open);
-			setOpen(!open);
-		};
-
 		return (
-			<div className="relative cursor-pointer" onClick={handleClick}>
+			<div className="relative cursor-pointer" onClick={() => setOpen(v => !v)}>
 				<div className="w-full border rounded px-3 py-2 text-left">
 					<span className="block text-xs text-gray-600">{label}</span>
 					<span>{display}</span>
