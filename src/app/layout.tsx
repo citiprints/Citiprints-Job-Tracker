@@ -23,36 +23,22 @@ export default function RootLayout({
 	const [authChecked, setAuthChecked] = useState(false);
 
 	useEffect(() => {
-		// Check theme from localStorage
-		const savedTheme = localStorage.getItem("theme") as "light" | "dark";
-		if (savedTheme) {
-			setTheme(savedTheme);
-			document.documentElement.setAttribute("data-theme", savedTheme);
-		}
-
-		// Register service worker for PWA
-		if ('serviceWorker' in navigator) {
-			window.addEventListener('load', () => {
-				navigator.serviceWorker.register('/sw.js')
-					.then((registration) => {
-						console.log('SW registered: ', registration);
-					})
-					.catch((registrationError) => {
-						console.log('SW registration failed: ', registrationError);
-					});
-			});
-		}
-
-		// Check if app is already installed
+		// Check if app is installed
 		const checkIfInstalled = () => {
 			if (window.matchMedia('(display-mode: standalone)').matches) {
-				console.log('App is already installed');
+				setShowInstallPrompt(false);
 				return;
 			}
 			
-			// Show install prompt for mobile users who haven't dismissed it
-			if (window.innerWidth <= 768 && !localStorage.getItem('installPromptDismissed')) {
-				console.log('Showing install prompt for mobile user');
+			// Check if user dismissed the prompt
+			const dismissed = localStorage.getItem('installPromptDismissed');
+			if (dismissed) {
+				setShowInstallPrompt(false);
+				return;
+			}
+			
+			// Show prompt for mobile users after a delay
+			if (window.innerWidth <= 768) {
 				setTimeout(() => {
 					setShowInstallPrompt(true);
 				}, 2000);
@@ -83,6 +69,8 @@ export default function RootLayout({
 				setAuthChecked(true);
 			}
 		}
+
+		// Check auth immediately
 		checkAuth();
 
 		// Listen for auth state changes (e.g., after login/logout)
@@ -90,33 +78,36 @@ export default function RootLayout({
 			checkAuth();
 		};
 
-		// Listen for data changes to refresh notification counts
-		const handleDataChange = () => {
-			if (user) {
-				loadNotificationCounts();
-			}
+		// Listen for focus events (when user returns to tab)
+		const handleFocus = () => {
+			checkAuth();
 		};
 
-		// Handle PWA install prompt
+		// Listen for data change events
+		const handleDataChange = () => {
+			loadNotificationCounts();
+		};
+
+		// Listen for beforeinstallprompt event
 		const handleBeforeInstallPrompt = (e: any) => {
-			console.log('beforeinstallprompt event fired');
-			// Prevent the mini-infobar from appearing on mobile
 			e.preventDefault();
-			// Stash the event so it can be triggered later
 			setDeferredPrompt(e);
-			// Show the install prompt immediately
 			setShowInstallPrompt(true);
 		};
 
-		// Handle successful installation
+		// Listen for appinstalled event
 		const handleAppInstalled = () => {
-			console.log('App was installed successfully');
 			setShowInstallPrompt(false);
 			setDeferredPrompt(null);
 		};
 
+		// Register service worker
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('/sw.js').catch(console.error);
+		}
+
 		window.addEventListener('storage', handleStorageChange);
-		window.addEventListener('focus', checkAuth);
+		window.addEventListener('focus', handleFocus);
 		window.addEventListener('dataChanged', handleDataChange);
 		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 		window.addEventListener('appinstalled', handleAppInstalled);
@@ -124,13 +115,23 @@ export default function RootLayout({
 
 		return () => {
 			window.removeEventListener('storage', handleStorageChange);
-			window.removeEventListener('focus', checkAuth);
+			window.removeEventListener('focus', handleFocus);
 			window.removeEventListener('dataChanged', handleDataChange);
 			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 			window.removeEventListener('appinstalled', handleAppInstalled);
 			window.removeEventListener('resize', checkIfInstalled);
 		};
 	}, [user]);
+
+	// Initialize theme
+	useEffect(() => {
+		// Check theme from localStorage
+		const savedTheme = localStorage.getItem("theme") as "light" | "dark";
+		if (savedTheme) {
+			setTheme(savedTheme);
+			document.documentElement.setAttribute("data-theme", savedTheme);
+		}
+	}, []);
 
 	async function loadNotificationCounts() {
 		try {
@@ -246,19 +247,25 @@ export default function RootLayout({
 				credentials: 'include', // Include cookies
 			});
 
-			// Always clear user state and redirect, regardless of response
+			// Clear user state immediately
 			setUser(null);
 			setNotificationCounts({ tasks: 0, quotations: 0 });
+			setAuthChecked(false); // Reset auth check state
 			
-			// Force a hard redirect to sign-in page
-			window.location.replace('/signin');
+			// Small delay to ensure state is cleared before redirect
+			setTimeout(() => {
+				window.location.replace('/signin');
+			}, 100);
 			
 		} catch (error) {
 			console.error('Logout error:', error);
 			// Still clear user state and redirect
 			setUser(null);
 			setNotificationCounts({ tasks: 0, quotations: 0 });
-			window.location.replace('/signin');
+			setAuthChecked(false);
+			setTimeout(() => {
+				window.location.replace('/signin');
+			}, 100);
 		} finally {
 			setIsLoggingOut(false);
 		}
@@ -312,16 +319,16 @@ export default function RootLayout({
 											<Link href="/tasks" className="px-2 py-1 rounded border relative">
 												Tasks
 												{notificationCounts.tasks > 0 && (
-													<span className="absolute -top-1 -right-1 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-														{notificationCounts.tasks}
+													<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+														{notificationCounts.tasks > 99 ? '99+' : notificationCounts.tasks}
 													</span>
 												)}
 											</Link>
 											<Link href="/quotations" className="px-2 py-1 rounded border relative">
 												Quotations
 												{notificationCounts.quotations > 0 && (
-													<span className="absolute -top-1 -right-1 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-														{notificationCounts.quotations}
+													<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+														{notificationCounts.quotations > 99 ? '99+' : notificationCounts.quotations}
 													</span>
 												)}
 											</Link>
