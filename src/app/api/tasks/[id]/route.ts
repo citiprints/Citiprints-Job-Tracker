@@ -143,18 +143,23 @@ export async function DELETE(
 
 		// Delete associated files from R2 (don't let this block task deletion)
 		if (attachments.length > 0) {
-			const deletePromises = attachments.map(async (attachmentKey) => {
+			const deletePromises = attachments.map(async (attachmentUrl) => {
 				try {
-					console.log(`Deleting R2 file: ${attachmentKey}`);
+					// Extract the filename from the URL (URL format: /api/files/filename)
+					const urlParts = attachmentUrl.split('/');
+					const filename = urlParts[urlParts.length - 1];
+					const key = decodeURIComponent(filename);
+					
+					console.log(`Deleting R2 file: ${key} from URL: ${attachmentUrl}`);
 					
 					const deleteCommand = new DeleteObjectCommand({
 						Bucket: R2_BUCKET,
-						Key: attachmentKey,
+						Key: key,
 					});
 					await s3Client.send(deleteCommand);
-					console.log(`Successfully deleted R2 file: ${attachmentKey}`);
+					console.log(`Successfully deleted R2 file: ${key}`);
 				} catch (error) {
-					console.error(`Failed to delete file ${attachmentKey}:`, error);
+					console.error(`Failed to delete file ${attachmentUrl}:`, error);
 					// Don't throw - continue with task deletion even if file deletion fails
 				}
 			});
