@@ -248,25 +248,19 @@ export default function TasksPage() {
 		load();
 	}, []);
 
-	// Auto refresh with countdown - pause when any date picker is open
+	// Auto refresh with countdown
 	useEffect(() => {
 		const id = setInterval(() => {
 			setRefreshIn(prev => {
 				if (prev <= 1) {
-					// Only refresh if no date picker is open
-					if (!anyDatePickerOpen) {
-						load();
-						return AUTO_REFRESH_SECONDS;
-					} else {
-						// Wait 30 more seconds if picker is open
-						return 30;
-					}
+					load();
+					return AUTO_REFRESH_SECONDS;
 				}
 				return prev - 1;
 			});
 		}, 1000);
 		return () => clearInterval(id);
-	}, [anyDatePickerOpen]);
+	}, []);
 
 	// Helper function to check if task is assigned to current user
 	function isAssignedToMe(task: Task): boolean {
@@ -529,11 +523,6 @@ export default function TasksPage() {
 		const isoLike = value; // "YYYY-MM-DDTHH:MM"
 		const datePart = isoLike ? isoLike.split("T")[0] : "";
 		const timePart = isoLike ? (isoLike.split("T")[1] || "") : "";
-
-		// Update global state when this picker opens/closes
-		useEffect(() => {
-			setAnyDatePickerOpen(open);
-		}, [open]);
 
 		function updateDate(nextDate: string) {
 			if (!nextDate && !timePart) return onChange("");
