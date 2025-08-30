@@ -1218,18 +1218,47 @@ export default function TasksPage() {
 					<div className="space-y-2">
 						{fields.map(f => (
 							<div key={f.id} className="text-sm">
-								<label className="block mb-1">{f.label}{f.required ? " *" : ""}</label>
+								<label htmlFor={`field-${f.key}`} className="block mb-1">{f.label}{f.required ? " *" : ""}</label>
 								{f.type === "TEXT" && (
-									<input className="w-full border rounded px-3 py-2" value={custom[f.key] ?? ""} onChange={e => setCustom({ ...custom, [f.key]: e.target.value })} />
+									<input 
+										id={`field-${f.key}`}
+										name={`field-${f.key}`}
+										className="w-full border rounded px-3 py-2" 
+										value={custom[f.key] ?? ""} 
+										onChange={e => setCustom({ ...custom, [f.key]: e.target.value })} 
+									/>
 								)}
 								{f.type === "NUMBER" && (
-									<input type="number" className="w-full border rounded px-3 py-2" value={custom[f.key] ?? ""} onChange={e => setCustom({ ...custom, [f.key]: e.target.valueAsNumber })} />
+									<input 
+										id={`field-${f.key}`}
+										name={`field-${f.key}`}
+										type="number" 
+										className="w-full border rounded px-3 py-2" 
+										value={custom[f.key] ?? ""} 
+										onChange={e => setCustom({ ...custom, [f.key]: e.target.valueAsNumber })} 
+									/>
 								)}
 								{f.type === "DATE" && (
-									<input type="date" className="w-full border rounded px-3 py-2" value={custom[f.key] ?? ""} onChange={e => setCustom({ ...custom, [f.key]: e.target.value })} />
+									<input 
+										id={`field-${f.key}`}
+										name={`field-${f.key}`}
+										type="date" 
+										className="w-full border rounded px-3 py-2" 
+										value={custom[f.key] ?? ""} 
+										onChange={e => setCustom({ ...custom, [f.key]: e.target.value })} 
+									/>
 								)}
 								{f.type === "BOOLEAN" && (
-									<label className="flex items-center gap-2"><input type="checkbox" checked={!!custom[f.key]} onChange={e => setCustom({ ...custom, [f.key]: e.target.checked })} /> {f.label}</label>
+									<label className="flex items-center gap-2">
+										<input 
+											id={`field-${f.key}`}
+											name={`field-${f.key}`}
+											type="checkbox" 
+											checked={!!custom[f.key]} 
+											onChange={e => setCustom({ ...custom, [f.key]: e.target.checked })} 
+										/> 
+										{f.label}
+									</label>
 								)}
 							</div>
 						))}
@@ -1442,12 +1471,25 @@ export default function TasksPage() {
 								>
 									<div className="grid grid-cols-2 gap-4">
 										<div>
-											<label className="block text-sm font-medium mb-1">Title *</label>
-											<input className="w-full border rounded px-3 py-2" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
+											<label htmlFor="edit-title" className="block text-sm font-medium mb-1">Title *</label>
+											<input 
+												id="edit-title"
+												name="edit-title"
+												className="w-full border rounded px-3 py-2" 
+												value={editTitle} 
+												onChange={e => setEditTitle(e.target.value)} 
+												required 
+											/>
 										</div>
 										<div>
-											<label className="block text-sm font-medium mb-1">Status</label>
-																							<select className="w-full border rounded px-3 py-2" value={editStatus} onChange={e => setEditStatus(e.target.value as Task["status"]) }>
+											<label htmlFor="edit-status" className="block text-sm font-medium mb-1">Status</label>
+											<select 
+												id="edit-status"
+												name="edit-status"
+												className="w-full border rounded px-3 py-2" 
+												value={editStatus} 
+												onChange={e => setEditStatus(e.target.value as Task["status"]) }
+											>
 												<option value="TODO">TODO</option>
 												<option value="IN_PROGRESS">IN_PROGRESS</option>
 												<option value="BLOCKED">BLOCKED</option>
@@ -1456,19 +1498,25 @@ export default function TasksPage() {
 												<option value="ARCHIVED">ARCHIVED</option>
 												<option value="CLIENT_TO_REVERT">CLIENT_TO_REVERT</option>
 											</select>
-											</div>
 										</div>
+									</div>
 
+									<div>
+										<label htmlFor="edit-description" className="block text-sm font-medium mb-1">Description</label>
+										<textarea 
+											id="edit-description"
+											name="edit-description"
+											className="w-full border rounded px-3 py-2" 
+											value={editDesc} 
+											onChange={e => setEditDesc(e.target.value)} 
+										/>
+									</div>
+
+									<div className="grid grid-cols-2 gap-4">
 										<div>
-											<label className="block text-sm font-medium mb-1">Description</label>
-											<textarea className="w-full border rounded px-3 py-2" value={editDesc} onChange={e => setEditDesc(e.target.value)} />
-										</div>
-
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<label className="block text-sm font-medium mb-1">Customer</label>
-												{showNewCustomerForm ? (
-													<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+											<label className="block text-sm font-medium mb-1">Customer</label>
+											{showNewCustomerForm ? (
+												<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
 							<div className="flex items-center justify-between">
 														<h3 className="font-medium text-sm">Add New Customer</h3>
 														<button
