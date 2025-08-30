@@ -22,36 +22,51 @@ export default function RootLayout({
 
 	// Simple auth check - this is the one that works when you click Sign In
 	useEffect(() => {
+		console.log('🔄 Layout mounted, checking auth...');
+		
 		const checkAuth = async () => {
+			console.log('🔍 Starting auth check...');
 			setLoading(true);
 			try {
 				const res = await fetch("/api/auth/me");
+				console.log('📡 Auth response status:', res.status);
 				if (res.ok) {
 					const userData = await res.json();
+					console.log('✅ User found:', userData.name);
 					setUser(userData);
 				} else {
+					console.log('❌ No user found');
 					setUser(null);
 				}
 			} catch (error) {
+				console.error('🚨 Auth check error:', error);
 				setUser(null);
 			} finally {
+				console.log('🏁 Auth check complete, setting loading to false');
 				setLoading(false);
 			}
 		};
 
-		checkAuth();
+		// Add a small delay to ensure the page is fully loaded
+		const timer = setTimeout(() => {
+			checkAuth();
+		}, 100);
+
+		return () => clearTimeout(timer);
 	}, []);
 
 	// Simple logout
 	const handleLogout = async () => {
+		console.log('🚪 Logging out...');
 		setLoading(true);
 		try {
 			await fetch('/api/auth/logout', {
 				method: 'POST',
 				credentials: 'include',
 			});
+			console.log('✅ Logout successful');
 		} catch (error) {
-			console.error('Logout error:', error);
+			console.error('🚨 Logout error:', error);
 		} finally {
 			setUser(null);
 			window.location.replace('/signin');
@@ -65,6 +80,8 @@ export default function RootLayout({
 		localStorage.setItem("theme", newTheme);
 		document.documentElement.setAttribute("data-theme", newTheme);
 	};
+
+	console.log('🎨 Rendering layout - user:', user?.name, 'loading:', loading);
 
 	return (
 		<html lang="en" data-theme={theme}>
