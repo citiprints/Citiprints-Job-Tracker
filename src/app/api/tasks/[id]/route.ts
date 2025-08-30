@@ -122,30 +122,39 @@ export async function DELETE(
 		// Get the task to find associated files
 		const task = await prisma.task.findUnique({
 			where: { id },
-			include: {
-				attachments: true,
-			},
 		});
 
 		if (!task) {
 			return NextResponse.json({ error: "Task not found" }, { status: 404 });
 		}
 
+		// Parse customFields to get attachments
+		let attachments: string[] = [];
+		try {
+			if (task.customFields) {
+				const customFields = typeof task.customFields === "string" 
+					? JSON.parse(task.customFields) 
+					: task.customFields;
+				attachments = customFields.attachments || [];
+			}
+		} catch (error) {
+			console.error("Error parsing customFields:", error);
+		}
+
 		// Delete associated files from R2 (don't let this block task deletion)
-		if (task.attachments && task.attachments.length > 0) {
-			const deletePromises = task.attachments.map(async (attachment) => {
+		if (attachments.length > 0) {
+			const deletePromises = attachments.map(async (attachmentKey) => {
 				try {
-					// Extract the key from the URL (assuming URL format: /api/files/key)
-					const urlParts = attachment.url.split('/');
-					const key = urlParts[urlParts.length - 1];
+					console.log(`Deleting R2 file: ${attachmentKey}`);
 					
 					const deleteCommand = new DeleteObjectCommand({
 						Bucket: R2_BUCKET,
-						Key: decodeURIComponent(key),
+						Key: attachmentKey,
 					});
 					await s3Client.send(deleteCommand);
+					console.log(`Successfully deleted R2 file: ${attachmentKey}`);
 				} catch (error) {
-					console.error(`Failed to delete file ${attachment.url}:`, error);
+					console.error(`Failed to delete file ${attachmentKey}:`, error);
 					// Don't throw - continue with task deletion even if file deletion fails
 				}
 			});
