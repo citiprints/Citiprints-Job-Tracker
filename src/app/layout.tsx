@@ -50,6 +50,7 @@ export default function RootLayout({
 			
 			// Show install prompt for mobile users who haven't dismissed it
 			if (window.innerWidth <= 768 && !localStorage.getItem('installPromptDismissed')) {
+				console.log('Showing install prompt for mobile user');
 				setTimeout(() => {
 					setShowInstallPrompt(true);
 				}, 2000);
@@ -92,6 +93,7 @@ export default function RootLayout({
 
 		// Handle PWA install prompt
 		const handleBeforeInstallPrompt = (e: any) => {
+			console.log('beforeinstallprompt event fired');
 			// Prevent the mini-infobar from appearing on mobile
 			e.preventDefault();
 			// Stash the event so it can be triggered later
@@ -102,9 +104,9 @@ export default function RootLayout({
 
 		// Handle successful installation
 		const handleAppInstalled = () => {
+			console.log('App was installed successfully');
 			setShowInstallPrompt(false);
 			setDeferredPrompt(null);
-			console.log('PWA was installed');
 		};
 
 		window.addEventListener('storage', handleStorageChange);
@@ -159,22 +161,49 @@ export default function RootLayout({
 	};
 
 	const handleInstallClick = async () => {
-		if (!deferredPrompt) return;
-		
-		// Show the install prompt
-		deferredPrompt.prompt();
-		
-		// Wait for the user to respond to the prompt
-		const { outcome } = await deferredPrompt.userChoice;
-		
-		if (outcome === 'accepted') {
-			console.log('User accepted the install prompt');
+		if (deferredPrompt) {
+			try {
+				// Show the install prompt
+				deferredPrompt.prompt();
+				
+				// Wait for the user to respond to the prompt
+				const { outcome } = await deferredPrompt.userChoice;
+				
+				if (outcome === 'accepted') {
+					console.log('User accepted the install prompt');
+				} else {
+					console.log('User dismissed the install prompt');
+				}
+				
+				// Clear the deferredPrompt
+				setDeferredPrompt(null);
+				setShowInstallPrompt(false);
+			} catch (error) {
+				console.error('Error showing install prompt:', error);
+				// Fallback to manual installation instructions
+				showManualInstallInstructions();
+			}
 		} else {
-			console.log('User dismissed the install prompt');
+			// No deferred prompt available, show manual instructions
+			showManualInstallInstructions();
+		}
+	};
+
+	const showManualInstallInstructions = () => {
+		const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+		const isAndroid = /Android/.test(navigator.userAgent);
+		
+		let instructions = '';
+		
+		if (isIOS) {
+			instructions = 'To install: Tap the Share button (📤) in Safari, then tap "Add to Home Screen"';
+		} else if (isAndroid) {
+			instructions = 'To install: Tap the menu (⋮) in Chrome, then tap "Add to Home Screen"';
+		} else {
+			instructions = 'To install: Look for the install option in your browser menu';
 		}
 		
-		// Clear the deferredPrompt
-		setDeferredPrompt(null);
+		alert(`Installation Instructions:\n\n${instructions}`);
 		setShowInstallPrompt(false);
 	};
 
@@ -183,6 +212,20 @@ export default function RootLayout({
 		// Don't show again for this session
 		localStorage.setItem('installPromptDismissed', 'true');
 	};
+
+	// Debug function to manually show install prompt
+	const debugShowInstallPrompt = () => {
+		console.log('Debug: Manually showing install prompt');
+		console.log('Deferred prompt available:', !!deferredPrompt);
+		console.log('User agent:', navigator.userAgent);
+		console.log('Screen width:', window.innerWidth);
+		setShowInstallPrompt(true);
+	};
+
+	// Add debug function to window for testing
+	if (typeof window !== 'undefined') {
+		(window as any).debugShowInstallPrompt = debugShowInstallPrompt;
+	}
 
 	return (
 		<html lang="en" data-theme={theme}>
@@ -281,6 +324,9 @@ export default function RootLayout({
 								<div>
 									<h3 className="font-semibold text-gray-900">Install App</h3>
 									<p className="text-sm text-gray-600">Add to home screen for quick access</p>
+									{deferredPrompt && (
+										<p className="text-xs text-green-600 mt-1">✓ Browser supports installation</p>
+									)}
 								</div>
 							</div>
 							<div className="flex space-x-2">
@@ -288,7 +334,7 @@ export default function RootLayout({
 									onClick={handleInstallClick}
 									className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800"
 								>
-									Install
+									{deferredPrompt ? 'Install' : 'Install'}
 								</button>
 								<button
 									onClick={dismissInstallPrompt}
