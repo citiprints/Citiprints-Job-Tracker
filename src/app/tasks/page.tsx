@@ -521,6 +521,21 @@ export default function TasksPage() {
 		const datePart = isoLike ? isoLike.split("T")[0] : "";
 		const timePart = isoLike ? (isoLike.split("T")[1] || "") : "";
 
+		// Close popup when clicking outside
+		useEffect(() => {
+			if (!open) return;
+			
+			function handleClickOutside(event: MouseEvent) {
+				const target = event.target as Element;
+				if (!target.closest('.datetime-selector')) {
+					setOpen(false);
+				}
+			}
+			
+			document.addEventListener('mousedown', handleClickOutside);
+			return () => document.removeEventListener('mousedown', handleClickOutside);
+		}, [open]);
+
 		function updateDate(nextDate: string) {
 			if (!nextDate && !timePart) return onChange("");
 			const next = `${nextDate || ""}${nextDate && timePart ? "T" : nextDate ? "T00:00" : ""}${timePart || ""}`.trim();
@@ -558,7 +573,10 @@ export default function TasksPage() {
 					key={`d-${d}`}
 					type="button"
 					className={`px-2 py-1 rounded text-sm ${selected ? "bg-gray-900 text-white" : "hover:bg-gray-100"}`}
-					onClick={() => updateDate(ymd)}
+					onClick={(e) => {
+						e.stopPropagation();
+						updateDate(ymd);
+					}}
 				>
 					{d}
 				</button>
@@ -572,17 +590,44 @@ export default function TasksPage() {
 		const display = value ? new Date(value).toLocaleString() : `Select ${label}`;
 
 		return (
-			<div className="relative cursor-pointer" onClick={() => setOpen(v => !v)}>
-				<div className="w-full border rounded px-3 py-2 text-left">
+			<div className="relative datetime-selector">
+				<div 
+					className="w-full border rounded px-3 py-2 text-left cursor-pointer" 
+					onClick={(e) => {
+						e.stopPropagation();
+						setOpen(v => !v);
+					}}
+				>
 					<span className="block text-xs text-gray-600">{label}</span>
 					<span>{display}</span>
 				</div>
 				{open && (
-					<div className="absolute z-10 mt-1 w-72 rounded border bg-white p-3 shadow" onClick={(e) => e.stopPropagation()}>
+					<div 
+						className="absolute z-10 mt-1 w-72 rounded border bg-white p-3 shadow" 
+						onClick={(e) => e.stopPropagation()}
+					>
 						<div className="flex items-center justify-between mb-2">
-							<button type="button" className="px-2 py-1 rounded border" onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))}>{"<"}</button>
+							<button 
+								type="button" 
+								className="px-2 py-1 rounded border" 
+								onClick={(e) => {
+									e.stopPropagation();
+									setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1));
+								}}
+							>
+								{"<"}
+							</button>
 							<div className="text-sm font-medium">{monthCursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</div>
-							<button type="button" className="px-2 py-1 rounded border" onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))}>{">"}</button>
+							<button 
+								type="button" 
+								className="px-2 py-1 rounded border" 
+								onClick={(e) => {
+									e.stopPropagation();
+									setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1));
+								}}
+							>
+								{">"}
+							</button>
 						</div>
 						<div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-600 mb-1">
 							<div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
@@ -591,19 +636,52 @@ export default function TasksPage() {
 							{dayButtons}
 						</div>
 						<div className="flex items-center gap-2">
-							<select className="border rounded px-2 py-1 text-sm" value={hour} onChange={e => updateTime(`${e.target.value || "00"}:${minute || "00"}`)}>
+							<select 
+								className="border rounded px-2 py-1 text-sm" 
+								value={hour} 
+								onChange={(e) => {
+									e.stopPropagation();
+									updateTime(`${e.target.value || "00"}:${minute || "00"}`);
+								}}
+							>
 								<option value="">HH</option>
 								{Array.from({length:24}).map((_,h) => {
 									const hv = `${h}`.padStart(2, "0");
 									return <option key={hv} value={hv}>{hv}</option>;
 								})}
 							</select>
-							<select className="border rounded px-2 py-1 text-sm" value={minute} onChange={e => updateTime(`${hour || "00"}:${e.target.value}`)}>
+							<select 
+								className="border rounded px-2 py-1 text-sm" 
+								value={minute} 
+								onChange={(e) => {
+									e.stopPropagation();
+									updateTime(`${hour || "00"}:${e.target.value}`);
+								}}
+							>
 								<option value="">MM</option>
 								{minuteOptions.map(m => <option key={m} value={m}>{m}</option>)}
 							</select>
-							<button type="button" className="ml-auto text-sm px-2 py-1" onClick={() => { onChange(""); setOpen(false); }}>Clear</button>
-							<button type="button" className="text-sm px-2 py-1 rounded bg-gray-900 text-white" onClick={() => setOpen(false)}>Done</button>
+							<button 
+								type="button" 
+								className="ml-auto text-sm px-2 py-1" 
+								onClick={(e) => {
+									e.stopPropagation();
+									onChange("");
+									setOpen(false);
+								}}
+							>
+								Clear
+							</button>
+							<button 
+								type="button" 
+								className="text-sm px-2 py-1 rounded bg-gray-900 text-white" 
+								onClick={(e) => {
+									e.stopPropagation();
+									setOpen(false);
+								}}
+							>
+								Done
+							</button>
 						</div>
 					</div>
 				)}
