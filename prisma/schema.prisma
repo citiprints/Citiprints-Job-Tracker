@@ -80,7 +80,7 @@ model Quotation {
   status         String       @default("PENDING")
   priority       String       @default("MEDIUM")
   customerId     String?
-  customerRef    Customer?    @relation("QuotationsCustomer", fields: [customerId], references: [id])
+  customerRef    Customer?    @relation(fields: [customerId], references: [id])
   customFields   String?
   expiresAt      DateTime
 
