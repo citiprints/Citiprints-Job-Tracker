@@ -987,7 +987,7 @@ export default function QuotationsPage() {
 					}}
 				>
 					<div 
-						className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[95vh] overflow-y-auto"
+						className="bg-white rounded-lg p-4 sm:p-6 max-w-sm sm:max-w-md md:max-w-lg w-full max-h-[90vh] sm:max-h-[95vh] overflow-y-auto"
 						onClick={(e) => e.stopPropagation()}
 					>
 						<h2 className="text-xl font-semibold mb-4">Convert Quotation to Task</h2>
