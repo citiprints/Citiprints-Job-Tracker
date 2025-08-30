@@ -25,8 +25,8 @@ export default function SignInPage() {
       return;
     }
     
-    // Redirect to dashboard after successful login
-    window.location.href = "/dashboard";
+    // Redirect to signin page after successful login
+    window.location.href = "/signin";
   }
 
   return (
