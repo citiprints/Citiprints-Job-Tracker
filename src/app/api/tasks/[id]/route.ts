@@ -27,7 +27,7 @@ const UpdateTaskSchema = z.object({
 	dueAt: z.string().optional(),
 	customerId: z.string().optional(),
 	assigneeId: z.string().optional(),
-	customFields: z.record(z.any()).optional(),
+	customFields: z.any().optional(),
 });
 
 export async function GET(
