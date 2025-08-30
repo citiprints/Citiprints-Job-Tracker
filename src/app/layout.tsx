@@ -11,6 +11,11 @@ type User = {
 	active: boolean;
 };
 
+type NotificationCounts = {
+	tasks: number;
+	quotations: number;
+};
+
 export default function RootLayout({
 	children,
 }: {
@@ -20,11 +25,35 @@ export default function RootLayout({
 	const [loading, setLoading] = useState(true);
 	const [theme, setTheme] = useState<"light" | "dark">("light");
 	const [mounted, setMounted] = useState(false);
+	const [notificationCounts, setNotificationCounts] = useState<NotificationCounts>({ tasks: 0, quotations: 0 });
 
 	// Set mounted to true after hydration
 	useEffect(() => {
 		setMounted(true);
 	}, []);
+
+	// Load notification counts
+	const loadNotificationCounts = async () => {
+		if (!user) return;
+		try {
+			const [tasksRes, quotationsRes] = await Promise.all([
+				fetch("/api/tasks?limit=1&includeArchived=false&includeQuotations=false"),
+				fetch("/api/quotations")
+			]);
+			
+			if (tasksRes.ok) {
+				const tasksData = await tasksRes.json();
+				setNotificationCounts(prev => ({ ...prev, tasks: tasksData.totalCount || 0 }));
+			}
+			
+			if (quotationsRes.ok) {
+				const quotationsData = await quotationsRes.json();
+				setNotificationCounts(prev => ({ ...prev, quotations: quotationsData.length || 0 }));
+			}
+		} catch (error) {
+			console.error('Failed to load notification counts:', error);
+		}
+	};
 
 	// Simple auth check - this is the one that works when you click Sign In
 	useEffect(() => {
@@ -63,6 +92,25 @@ export default function RootLayout({
 		return () => clearTimeout(timer);
 	}, [mounted]);
 
+	// Load notification counts when user changes
+	useEffect(() => {
+		if (user) {
+			loadNotificationCounts();
+		}
+	}, [user]);
+
+	// Listen for data changes
+	useEffect(() => {
+		const handleDataChange = () => {
+			if (user) {
+				loadNotificationCounts();
+			}
+		};
+
+		window.addEventListener('dataChanged', handleDataChange);
+		return () => window.removeEventListener('dataChanged', handleDataChange);
+	}, [user]);
+
 	// Simple logout
 	const handleLogout = async () => {
 		console.log('🚪 Logging out...');
@@ -77,6 +125,7 @@ export default function RootLayout({
 			console.error('🚨 Logout error:', error);
 		} finally {
 			setUser(null);
+			setNotificationCounts({ tasks: 0, quotations: 0 });
 			window.location.replace('/signin');
 		}
 	};
@@ -162,14 +211,24 @@ export default function RootLayout({
 													<span>Signed in as:</span>
 													<span className="font-medium text-gray-800">{user.name}</span>
 												</div>
-												<Link href="/dashboard" className="px-2 py-1 rounded border">
+												<Link href="/dashboard" className="px-2 py-1 rounded border relative">
 													Dashboard
 												</Link>
-												<Link href="/tasks" className="px-2 py-1 rounded border">
+												<Link href="/tasks" className="px-2 py-1 rounded border relative">
 													Tasks
+													{notificationCounts.tasks > 0 && (
+														<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center">
+															{notificationCounts.tasks}
+														</span>
+													)}
 												</Link>
-												<Link href="/quotations" className="px-2 py-1 rounded border">
+												<Link href="/quotations" className="px-2 py-1 rounded border relative">
 													Quotations
+													{notificationCounts.quotations > 0 && (
+														<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center">
+															{notificationCounts.quotations}
+														</span>
+													)}
 												</Link>
 												<Link href="/archive" className="px-2 py-1 rounded border">
 													Archive
