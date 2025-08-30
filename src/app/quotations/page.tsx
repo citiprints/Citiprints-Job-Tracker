@@ -147,6 +147,7 @@ export default function QuotationsPage() {
 	const [viewingId, setViewingId] = useState<string | null>(null);
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [convertingId, setConvertingId] = useState<string | null>(null);
+	const [deletingId, setDeletingId] = useState<string | null>(null);
 	const [customers, setCustomers] = useState<{ id: string; name: string }[]>([]);
 	const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
 	
@@ -235,6 +236,7 @@ export default function QuotationsPage() {
 				setEditCustomerId("");
 				setEditAssigneeId("");
 				setEditCustom({});
+				notifyDataChange();
 			} else {
 				const errorData = await res.json();
 				alert(errorData.error || "Failed to update quotation");
@@ -247,6 +249,7 @@ export default function QuotationsPage() {
 	async function deleteQuotation(id: string) {
 		if (!confirm("Are you sure you want to delete this quotation?")) return;
 		
+		setDeletingId(id);
 		try {
 			const res = await fetch(`/api/quotations/${id}`, {
 				method: "DELETE"
@@ -254,12 +257,15 @@ export default function QuotationsPage() {
 			
 			if (res.ok) {
 				load();
+				notifyDataChange();
 			} else {
 				const errorData = await res.json();
 				alert(errorData.error || "Failed to delete quotation");
 			}
 		} catch (error) {
 			alert("Failed to delete quotation");
+		} finally {
+			setDeletingId(null);
 		}
 	}
 
@@ -269,6 +275,7 @@ export default function QuotationsPage() {
 			return;
 		}
 		
+		setConvertingId(id);
 		try {
 			const res = await fetch(`/api/quotations/${id}`, {
 				method: "POST",
@@ -285,13 +292,21 @@ export default function QuotationsPage() {
 				setConvertingId(null);
 				setConvertStartAt("");
 				setConvertDueAt("");
+				notifyDataChange();
 			} else {
 				const errorData = await res.json();
 				alert(errorData.error || "Failed to convert quotation to task");
 			}
 		} catch (error) {
 			alert("Failed to convert quotation to task");
+		} finally {
+			setConvertingId(null);
 		}
+	}
+
+	// Function to notify layout about data changes
+	function notifyDataChange() {
+		window.dispatchEvent(new Event('dataChanged'));
 	}
 
 	useEffect(() => {
@@ -354,17 +369,19 @@ export default function QuotationsPage() {
 									</button>
 									<button
 										type="button"
-										className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+										className="text-xs px-2 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
 										onClick={() => deleteQuotation(q.id)}
+										disabled={deletingId === q.id}
 									>
-										Delete
+										{deletingId === q.id ? "Deleting..." : "Delete"}
 									</button>
 									<button
 										type="button"
-										className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+										className="text-xs px-2 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
 										onClick={() => setConvertingId(q.id)}
+										disabled={convertingId === q.id}
 									>
-										Convert to Task
+										{convertingId === q.id ? "Converting..." : "Convert to Task"}
 									</button>
 								</div>
 							</div>
@@ -893,8 +910,9 @@ export default function QuotationsPage() {
 						<div className="flex gap-2 mt-6">
 							<button
 								type="button"
-								className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+								className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
 								onClick={() => editQuotation(editingId)}
+								disabled={editingId === null}
 							>
 								Save Changes
 							</button>
@@ -938,10 +956,11 @@ export default function QuotationsPage() {
 						<div className="flex gap-2 mt-6">
 							<button
 								type="button"
-								className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+								className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
 								onClick={() => convertToTask(convertingId)}
+								disabled={convertingId === null}
 							>
-								Convert to Task
+								{convertingId === null ? "Convert to Task" : "Converting..."}
 							</button>
 							<button
 								type="button"

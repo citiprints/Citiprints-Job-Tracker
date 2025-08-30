@@ -87,6 +87,8 @@ export default function TasksPage() {
 	const [editStart, setEditStart] = useState<string>("");
 	const [editDue, setEditDue] = useState<string>("");
 	const [submitting, setSubmitting] = useState(false);
+	const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+	const [deletingId, setDeletingId] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [customers, setCustomers] = useState<{ id: string; name: string }[]>([]);
 	const [customerId, setCustomerId] = useState<string>("");
@@ -248,6 +250,11 @@ export default function TasksPage() {
 		} finally {
 			setLoading(false);
 		}
+	}
+
+	// Function to notify layout about data changes
+	function notifyDataChange() {
+		window.dispatchEvent(new Event('dataChanged'));
 	}
 
 	useEffect(() => {
@@ -531,6 +538,7 @@ export default function TasksPage() {
 		setNewCustomerEmail("");
 		setNewCustomerPhone("");
 		load();
+		notifyDataChange();
 	}
 
 	function DateTimeSelector({ label, value, onChange }: { label: string; value: string; onChange: (next: string) => void }) {
@@ -647,6 +655,7 @@ export default function TasksPage() {
 	}
 
 	async function duplicateTask(task: Task) {
+		setDuplicatingId(task.id);
 		try {
 			// Create a copy of the task with "(Copy)" appended to title
 			const duplicatedTask = {
@@ -675,12 +684,15 @@ export default function TasksPage() {
 					customFields: typeof newTask.customFields === "string" ? (() => { try { return JSON.parse(newTask.customFields); } catch { return {}; } })() : (newTask.customFields || {})
 				}]);
 				setError(null);
+				notifyDataChange();
 			} else {
 				const errorData = await res.json();
 				setError(errorData.error || "Failed to duplicate task");
 			}
 		} catch (err) {
 			setError("Failed to duplicate task");
+		} finally {
+			setDuplicatingId(null);
 		}
 	}
 
@@ -1213,7 +1225,9 @@ export default function TasksPage() {
 						))}
 					</div>
 					{error && <p className="text-sm text-red-600">{error}</p>}
-					<button disabled={submitting} className="rounded bg-gray-900 px-3 py-2 text-white">{submitting ? "Creating..." : "Create"}</button>
+					<button type="submit" className="w-full bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 disabled:opacity-50" disabled={submitting}>
+						{submitting ? "Creating..." : "Create task"}
+					</button>
 				</form>
 			</section>
 			<section>
@@ -2039,22 +2053,27 @@ export default function TasksPage() {
 										</button>
 										<button
 											type="button"
-											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+											className="text-xs px-2 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
 											onClick={async () => {
 												if (!confirm("Delete this task?")) return;
+												setDeletingId(t.id);
 												await fetch(`/api/tasks/${t.id}`, { method: "DELETE" });
 												load();
+												setDeletingId(null);
+												notifyDataChange();
 											}}
+											disabled={deletingId === t.id}
 										>
-											Delete
+											{deletingId === t.id ? "Deleting..." : "Delete"}
 										</button>
 
 										<button
 											type="button"
-											className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
+											className="text-xs px-2 py-1 rounded border hover:bg-gray-50 disabled:opacity-50"
 											onClick={() => duplicateTask(t)}
+											disabled={duplicatingId === t.id}
 										>
-											Duplicate
+											{duplicatingId === t.id ? "Duplicating..." : "Duplicate"}
 										</button>
 									</div>
 
