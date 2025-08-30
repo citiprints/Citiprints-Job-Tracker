@@ -224,8 +224,11 @@ export default function TasksPage() {
 				subtasks: t.subtasks ?? [],
 				customFields: typeof t.customFields === "string" ? (() => { try { return JSON.parse(t.customFields); } catch { return {}; } })() : (t.customFields || {})
 			}));
-			// Filter out archived tasks from main list
-			const activeTasks = loaded.filter(task => task.status !== "ARCHIVED");
+			// Filter out archived tasks and quotations from main list
+			const activeTasks = loaded.filter(task => 
+				task.status !== "ARCHIVED" && 
+				!task.customFields?.isQuotation
+			);
 			setTasks(activeTasks);
 		}
 		if (resFields.ok) {

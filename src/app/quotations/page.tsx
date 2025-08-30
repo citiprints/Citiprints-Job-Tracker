@@ -583,6 +583,359 @@ export default function QuotationsPage() {
 									</select>
 								</div>
 							</div>
+
+							{/* Category-specific fields */}
+							{editCustom?.category === "Rigid Boxes" && (
+								<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+									<h3 className="font-medium text-sm">Rigid Box Specifications</h3>
+									
+									{/* Box Type - Radio buttons */}
+									<div>
+										<label className="block text-sm font-medium mb-2">Box Type</label>
+										<div className="space-y-2">
+											{["Lid & Base", "Magnetic", "Ribbon", "Book", "Custom"].map(type => (
+												<label key={type} className="flex items-center gap-2">
+													<input
+														type="radio"
+														name="editBoxType"
+														value={type}
+														checked={editCustom?.boxType === type}
+														onChange={e => setEditCustom({ ...editCustom, boxType: e.target.value })}
+													/>
+													{type}
+												</label>
+											))}
+										</div>
+									</div>
+
+									{/* Size */}
+									<div>
+										<label className="block text-sm font-medium mb-2">Size</label>
+										<div className="flex items-center gap-2">
+											<input
+												type="text"
+												className="flex-1 border rounded px-3 py-2"
+												placeholder="Enter size"
+												value={editCustom?.size ?? ""}
+												onChange={e => setEditCustom({ ...editCustom, size: e.target.value })}
+											/>
+											<label className="flex items-center gap-2 text-sm">
+												<input
+													type="checkbox"
+													checked={editCustom?.existingSize ?? false}
+													onChange={e => setEditCustom({ ...editCustom, existingSize: e.target.checked })}
+												/>
+												Existing size
+											</label>
+										</div>
+									</div>
+
+									{/* Top Outer */}
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2"
+										placeholder="Top Outer"
+										value={editCustom?.topOuter ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, topOuter: e.target.value })}
+									/>
+
+									{/* Top Inner */}
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2"
+										placeholder="Top Inner"
+										value={editCustom?.topInner ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, topInner: e.target.value })}
+									/>
+
+									{/* Bottom Outer */}
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2"
+										placeholder="Bottom Outer"
+										value={editCustom?.bottomOuter ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, bottomOuter: e.target.value })}
+									/>
+
+									{/* Bottom Inner */}
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2"
+										placeholder="Bottom Inner"
+										value={editCustom?.bottomInner ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, bottomInner: e.target.value })}
+									/>
+
+									{/* Partition */}
+									<div>
+										<label className="flex items-center gap-2">
+											<input
+												type="checkbox"
+												checked={editCustom?.hasPartition ?? false}
+												onChange={e => setEditCustom({ ...editCustom, hasPartition: e.target.checked })}
+											/>
+											Partition
+										</label>
+										{editCustom?.hasPartition && (
+											<textarea
+												className="w-full border rounded px-3 py-2 mt-2"
+												placeholder="Partition description"
+												value={editCustom?.partitionDescription ?? ""}
+												onChange={e => setEditCustom({ ...editCustom, partitionDescription: e.target.value })}
+											/>
+										)}
+									</div>
+								</div>
+							)}
+
+							{editCustom?.category === "Cake Boxes" && (
+								<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+									<h3 className="font-medium text-sm">Cake Box Specifications</h3>
+									<div>
+										<label className="block text-sm font-medium mb-2">Size</label>
+										<div className="flex items-center gap-2">
+											<input
+												type="text"
+												className="flex-1 border rounded px-3 py-2"
+												placeholder="Enter size"
+												value={editCustom?.size ?? ""}
+												onChange={e => setEditCustom({ ...editCustom, size: e.target.value })}
+											/>
+											<label className="flex items-center gap-2 text-sm">
+												<input
+													type="checkbox"
+													checked={editCustom?.existingSize ?? false}
+													onChange={e => setEditCustom({ ...editCustom, existingSize: e.target.checked })}
+												/>
+												Existing size
+											</label>
+										</div>
+									</div>
+									<div>
+										<label className="flex items-center gap-2">
+											<input
+												type="checkbox"
+												checked={editCustom?.hasWindow ?? false}
+												onChange={e => setEditCustom({ ...editCustom, hasWindow: e.target.checked })}
+											/>
+											Window
+										</label>
+										{editCustom?.hasWindow && (
+											<input
+												type="text"
+												className="w-full border rounded px-3 py-2 mt-2"
+												placeholder="Window details"
+												value={editCustom?.windowDetails ?? ""}
+												onChange={e => setEditCustom({ ...editCustom, windowDetails: e.target.value })}
+											/>
+										)}
+									</div>
+									<div>
+										<label className="flex items-center gap-2">
+											<input
+												type="checkbox"
+												checked={editCustom?.innerPrinting ?? false}
+												onChange={e => setEditCustom({ ...editCustom, innerPrinting: e.target.checked })}
+											/>
+											Inner Printing
+										</label>
+										{editCustom?.innerPrinting && (
+											<input
+												type="text"
+												className="w-full border rounded px-3 py-2 mt-2"
+												placeholder="Inner printing details"
+												value={editCustom?.innerPrintingDetails ?? ""}
+												onChange={e => setEditCustom({ ...editCustom, innerPrintingDetails: e.target.value })}
+											/>
+										)}
+									</div>
+								</div>
+							)}
+
+							{editCustom?.category === "Paper Bags" && (
+								<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+									<h3 className="font-medium text-sm">Paper Bag Specifications</h3>
+									<div>
+										<label className="block text-sm font-medium mb-2">Size</label>
+										<div className="flex items-center gap-2">
+											<input
+												type="text"
+												className="flex-1 border rounded px-3 py-2"
+												placeholder="Enter size"
+												value={editCustom?.size ?? ""}
+												onChange={e => setEditCustom({ ...editCustom, size: e.target.value })}
+											/>
+											<label className="flex items-center gap-2 text-sm">
+												<input
+													type="checkbox"
+													checked={editCustom?.existingSize ?? false}
+													onChange={e => setEditCustom({ ...editCustom, existingSize: e.target.checked })}
+												/>
+												Existing size
+											</label>
+										</div>
+									</div>
+									<div>
+										<label className="flex items-center gap-2">
+											<input
+												type="checkbox"
+												checked={editCustom?.innerPrinting ?? false}
+												onChange={e => setEditCustom({ ...editCustom, innerPrinting: e.target.checked })}
+											/>
+											Inner Printing
+										</label>
+										{editCustom?.innerPrinting && (
+											<input
+												type="text"
+												className="w-full border rounded px-3 py-2 mt-2"
+												placeholder="Inner printing details"
+												value={editCustom?.innerPrintingDetails ?? ""}
+												onChange={e => setEditCustom({ ...editCustom, innerPrintingDetails: e.target.value })}
+											/>
+										)}
+									</div>
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2"
+										placeholder="Rope details"
+										value={editCustom?.rope ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, rope: e.target.value })}
+									/>
+								</div>
+							)}
+
+							{editCustom?.category === "Stickers" && (
+								<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+									<h3 className="font-medium text-sm">Sticker Specifications</h3>
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2"
+										placeholder="Size"
+										value={editCustom?.size ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, size: e.target.value })}
+									/>
+									<div className="grid grid-cols-2 gap-3">
+										<div>
+											<label className="block text-sm font-medium mb-1">Shape</label>
+											<select
+												className="w-full border rounded px-3 py-2"
+												value={editCustom?.shape ?? "Rectangle"}
+												onChange={e => setEditCustom({ ...editCustom, shape: e.target.value })}
+											>
+												<option>Rectangle</option>
+												<option>Circle</option>
+												<option>Custom</option>
+											</select>
+										</div>
+										<div>
+											<label className="block text-sm font-medium mb-1">Material</label>
+											<select
+												className="w-full border rounded px-3 py-2"
+												value={editCustom?.material ?? "Artsticker"}
+												onChange={e => setEditCustom({ ...editCustom, material: e.target.value })}
+											>
+												<option>Artsticker</option>
+												<option>Transparent</option>
+												<option>Chrome</option>
+												<option>Synthetic</option>
+											</select>
+										</div>
+									</div>
+								</div>
+							)}
+
+							{editCustom?.category === "Cards" && (
+								<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+									<h3 className="font-medium text-sm">Card Specifications</h3>
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2"
+										placeholder="Size"
+										value={editCustom?.size ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, size: e.target.value })}
+									/>
+									<div>
+										<label className="block text-sm font-medium mb-1">Sides</label>
+										<div className="flex items-center gap-4">
+											<label className="flex items-center gap-2 text-sm">
+												<input
+													type="radio"
+													name="editCardSides"
+													value="single"
+													checked={(editCustom?.sides ?? "single") === "single"}
+													onChange={() => setEditCustom({ ...editCustom, sides: "single" })}
+												/>
+												Single side
+											</label>
+											<label className="flex items-center gap-2 text-sm">
+												<input
+													type="radio"
+													name="editCardSides"
+													value="double"
+													checked={editCustom?.sides === "double"}
+													onChange={() => setEditCustom({ ...editCustom, sides: "double" })}
+												/>
+												Double side
+											</label>
+										</div>
+									</div>
+									<input
+										type="text"
+										className="w-full border rounded px-3 py-2"
+										placeholder="Material"
+										value={editCustom?.material ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, material: e.target.value })}
+									/>
+								</div>
+							)}
+
+							{editCustom?.category === "Invitation" && (
+								<div className="space-y-3 p-3 border border-gray-200 rounded bg-gray-50">
+									<h3 className="font-medium text-sm">Invitation Specifications</h3>
+									<div>
+										<label className="block text-sm font-medium mb-2">Size</label>
+										<div className="flex items-center gap-2">
+											<input type="text" className="flex-1 border rounded px-3 py-2" placeholder="Enter size" value={editCustom?.size ?? ""} onChange={e => setEditCustom({ ...editCustom, size: e.target.value })} />
+											<label className="flex items-center gap-2 text-sm">
+												<input type="checkbox" checked={editCustom?.existingSize ?? false} onChange={e => setEditCustom({ ...editCustom, existingSize: e.target.checked })} />
+												Existing size
+											</label>
+										</div>
+									</div>
+									<input type="text" className="w-full border rounded px-3 py-2" placeholder="Material" value={editCustom?.material ?? ""} onChange={e => setEditCustom({ ...editCustom, material: e.target.value })} />
+									<input type="text" className="w-full border rounded px-3 py-2" placeholder="Envelope" value={editCustom?.envelope ?? ""} onChange={e => setEditCustom({ ...editCustom, envelope: e.target.value })} />
+								</div>
+							)}
+
+							{/* Category and Quantity fields */}
+							<div className="grid grid-cols-2 gap-3">
+								<div>
+									<label className="block text-sm font-medium mb-1">Category</label>
+									<select
+										className="w-full border rounded px-3 py-2"
+										value={editCustom?.category ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, category: e.target.value })}
+									>
+										<option value="">Select type</option>
+										<option value="Rigid Boxes">Rigid Boxes</option>
+										<option value="Cake Boxes">Cake Boxes</option>
+										<option value="Paper Bags">Paper Bags</option>
+										<option value="Stickers">Stickers</option>
+										<option value="Cards">Cards</option>
+										<option value="Invitation">Invitation</option>
+									</select>
+								</div>
+								<div>
+									<label className="block text-sm font-medium mb-1">Quantity</label>
+									<input
+										type="number"
+										className="w-full border rounded px-3 py-2"
+										placeholder="Quantity"
+										value={editCustom?.quantity ?? ""}
+										onChange={e => setEditCustom({ ...editCustom, quantity: e.target.valueAsNumber || "" })}
+									/>
+								</div>
+							</div>
 						</div>
 						<div className="flex gap-2 mt-6">
 							<button
