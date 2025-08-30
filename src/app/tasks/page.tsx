@@ -1,4 +1,4 @@
-// FORCE REBUILD - Loading animations added
+// FORCE REBUILD - Redeploy with updated environment variables
 "use client";
 import React, { useEffect, useState } from "react";
 
