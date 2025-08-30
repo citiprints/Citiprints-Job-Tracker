@@ -574,8 +574,15 @@ export default function TasksPage() {
 
 		const display = value ? new Date(value).toLocaleString() : `Select ${label}`;
 
+		const handleClick = (e: React.MouseEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+			console.log('Date picker clicked, current open state:', open);
+			setOpen(!open);
+		};
+
 		return (
-			<div className="relative cursor-pointer" onClick={() => setOpen(v => !v)}>
+			<div className="relative cursor-pointer" onClick={handleClick}>
 				<div className="w-full border rounded px-3 py-2 text-left">
 					<span className="block text-xs text-gray-600">{label}</span>
 					<span>{display}</span>
