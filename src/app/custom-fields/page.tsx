@@ -1,38 +1,90 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-type Field = { id: string; key: string; label: string; type: string; required: boolean; order: number };
+type CustomField = {
+	id: string;
+	key: string;
+	label: string;
+	type: string;
+	required: boolean;
+	order: number;
+	createdAt: Date;
+};
 
 // Loading skeleton component
 function CustomFieldsSkeleton() {
 	return (
-		<div className="space-y-2">
-			{[1, 2, 3, 4].map((i) => (
-				<div key={i} className="border rounded p-3">
+		<div className="space-y-6">
+			{/* Header skeleton */}
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+				<div className="animate-pulse">
+					<div className="h-8 bg-gray-200 rounded w-48"></div>
+				</div>
+				<div className="flex flex-wrap items-center gap-2">
 					<div className="animate-pulse">
-						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-							<div className="h-5 bg-gray-200 rounded w-32 flex-shrink-0"></div>
-							<div className="flex gap-2 flex-shrink-0">
-								<div className="h-6 bg-gray-200 rounded w-12"></div>
-								<div className="h-6 bg-gray-200 rounded w-12"></div>
-							</div>
-						</div>
-						<div className="h-4 bg-gray-200 rounded w-24"></div>
+						<div className="h-10 bg-gray-200 rounded w-32"></div>
 					</div>
 				</div>
-			))}
+			</div>
+
+			{/* Fields skeleton */}
+			<div className="space-y-4">
+				{[1, 2, 3, 4, 5].map((i) => (
+					<div key={i} className="border border-gray-200 rounded-lg p-4">
+						<div className="animate-pulse">
+							<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+								<div className="flex flex-wrap items-center gap-2 min-w-0">
+									<div className="h-4 bg-gray-200 rounded w-32 sm:w-48 max-w-full"></div>
+									<div className="h-4 bg-gray-200 rounded w-16 flex-shrink-0"></div>
+									<div className="h-4 bg-gray-200 rounded w-20 flex-shrink-0"></div>
+								</div>
+								<div className="flex flex-col items-end gap-1 flex-shrink-0">
+									<div className="h-4 bg-gray-200 rounded w-20"></div>
+									<div className="h-4 bg-gray-200 rounded w-16"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
 		</div>
 	);
 }
 
 export default function CustomFieldsPage() {
-	const [fields, setFields] = useState<Field[]>([]);
+	const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
+	const [fields, setFields] = useState<CustomField[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [keyv, setKeyv] = useState("");
-	const [label, setLabel] = useState("");
-	const [type, setType] = useState("TEXT");
-	const [required, setRequired] = useState(false);
-	const [order, setOrder] = useState(0);
+	const [error, setError] = useState<string | null>(null);
+	const [editingId, setEditingId] = useState<string | null>(null);
+	const [editKey, setEditKey] = useState("");
+	const [editLabel, setEditLabel] = useState("");
+	const [editType, setEditType] = useState("");
+	const [editRequired, setEditRequired] = useState(false);
+	const [editOrder, setEditOrder] = useState(0);
+
+	// Check authentication
+	useEffect(() => {
+		const checkAuth = async () => {
+			try {
+				const res = await fetch("/api/auth/me");
+				if (res.ok) {
+					const userData = await res.json();
+					setCurrentUser(userData);
+				} else {
+					// Redirect to homepage if not authenticated
+					window.location.href = "/";
+					return;
+				}
+			} catch (error) {
+				console.error('Auth check error:', error);
+				window.location.href = "/";
+				return;
+			}
+		};
+
+		checkAuth();
+	}, []);
 
 	async function load() {
 		setLoading(true);

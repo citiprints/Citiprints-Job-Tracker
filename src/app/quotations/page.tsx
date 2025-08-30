@@ -164,18 +164,27 @@ export default function QuotationsPage() {
 	const [convertStartAt, setConvertStartAt] = useState<string>("");
 	const [convertDueAt, setConvertDueAt] = useState<string>("");
 
-	// Get current user
+	// Check authentication
 	useEffect(() => {
-		async function getCurrentUser() {
-			const res = await fetch("/api/auth/me");
-			if (res.ok) {
-				const user = await res.json();
-				setCurrentUser(user);
-			} else {
-				redirect("/signin");
+		const checkAuth = async () => {
+			try {
+				const res = await fetch("/api/auth/me");
+				if (res.ok) {
+					const userData = await res.json();
+					setCurrentUser(userData);
+				} else {
+					// Redirect to homepage if not authenticated
+					window.location.href = "/";
+					return;
+				}
+			} catch (error) {
+				console.error('Auth check error:', error);
+				window.location.href = "/";
+				return;
 			}
-		}
-		getCurrentUser();
+		};
+
+		checkAuth();
 	}, []);
 
 	async function load() {

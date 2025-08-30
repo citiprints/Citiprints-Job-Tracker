@@ -8,29 +8,29 @@ type Task = {
 	id: string;
 	title: string;
 	description: string;
-	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED" | "CLIENT_TO_REVERT";
+	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED" | "CLIENT_TO_REVERT" | "OTHERS";
 	priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 	startAt?: string | null;
 	dueAt: string | null;
-	createdAt: string;
+	estimatedHours?: number | null;
+	actualHours?: number | null;
 	customerId?: string | null;
-	customerRef?: { id: string; name: string } | null;
+	customerRef?: { id: string; name: string; email: string } | null;
+	jobNumber?: string | null;
 	customFields?: any;
 	assignments?: { id: string; user: { id: string; name: string }; role: string }[];
 	subtasks?: Subtask[];
+	createdAt: string;
+	updatedAt: string;
 };
 
 type Subtask = {
 	id: string;
 	title: string;
-	status: "TODO" | "IN_PROGRESS" | "DONE";
+	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE";
 	assigneeId?: string | null;
-	assignee?: { id: string; name: string; email: string } | null;
 	dueAt?: string | null;
-	estimatedHours?: number | null;
 	order: number;
-	createdAt: string;
-	updatedAt: string;
 };
 
 type Field = { id: string; key: string; label: string; type: string; required: boolean; order: number };
@@ -38,29 +38,52 @@ type Field = { id: string; key: string; label: string; type: string; required: b
 // Loading skeleton component
 function TasksSkeleton() {
 	return (
-		<div className="space-y-4">
-			{[1, 2, 3, 4, 5].map((i) => (
-				<div key={i} className="border border-black rounded p-3">
+		<div className="space-y-6">
+			{/* Header skeleton */}
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+				<div className="animate-pulse">
+					<div className="h-8 bg-gray-200 rounded w-48"></div>
+				</div>
+				<div className="flex flex-wrap items-center gap-2">
 					<div className="animate-pulse">
-						<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-							<div className="flex flex-wrap items-center gap-2 min-w-0">
-								<div className="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></div>
-								<div className="h-5 bg-gray-200 rounded w-32 sm:w-48 max-w-full"></div>
-								<div className="h-4 bg-gray-200 rounded w-16 flex-shrink-0"></div>
-								<div className="h-4 bg-gray-200 rounded w-20 flex-shrink-0"></div>
-								<div className="h-4 bg-gray-200 rounded w-24 flex-shrink-0"></div>
-							</div>
-							<div className="h-6 bg-gray-200 rounded w-20 flex-shrink-0"></div>
-						</div>
-						<div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-						<div className="flex gap-2 flex-wrap">
-							<div className="h-8 bg-gray-200 rounded w-16 flex-shrink-0"></div>
-							<div className="h-8 bg-gray-200 rounded w-16 flex-shrink-0"></div>
-							<div className="h-8 bg-gray-200 rounded w-16 flex-shrink-0"></div>
-						</div>
+						<div className="h-10 bg-gray-200 rounded w-32"></div>
+					</div>
+					<div className="animate-pulse">
+						<div className="h-10 bg-gray-200 rounded w-24"></div>
 					</div>
 				</div>
-			))}
+			</div>
+
+			{/* Filters skeleton */}
+			<div className="flex flex-wrap items-center gap-4">
+				{[1, 2, 3, 4, 5].map((i) => (
+					<div key={i} className="animate-pulse">
+						<div className="h-8 bg-gray-200 rounded w-24"></div>
+					</div>
+				))}
+			</div>
+
+			{/* Tasks skeleton */}
+			<div className="space-y-4">
+				{[1, 2, 3, 4, 5].map((i) => (
+					<div key={i} className="border border-gray-200 rounded-lg p-4">
+						<div className="animate-pulse">
+							<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+								<div className="flex flex-wrap items-center gap-2 min-w-0">
+									<div className="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></div>
+									<div className="h-4 bg-gray-200 rounded w-64 sm:w-96 max-w-full"></div>
+									<div className="h-4 bg-gray-200 rounded w-16 flex-shrink-0"></div>
+									<div className="h-4 bg-gray-200 rounded w-20 flex-shrink-0"></div>
+								</div>
+								<div className="flex flex-col items-end gap-1 flex-shrink-0">
+									<div className="h-4 bg-gray-200 rounded w-20"></div>
+									<div className="h-4 bg-gray-200 rounded w-16"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
 		</div>
 	);
 }
@@ -125,6 +148,29 @@ export default function TasksPage() {
 	const countdownRef = useRef(AUTO_REFRESH_SECONDS);
 	const displayRef = useRef<HTMLSpanElement>(null);
 
+	// Check authentication
+	useEffect(() => {
+		const checkAuth = async () => {
+			try {
+				const res = await fetch("/api/auth/me");
+				if (res.ok) {
+					const userData = await res.json();
+					setCurrentUser(userData);
+				} else {
+					// Redirect to homepage if not authenticated
+					window.location.href = "/";
+					return;
+				}
+			} catch (error) {
+				console.error('Auth check error:', error);
+				window.location.href = "/";
+				return;
+			}
+		};
+
+		checkAuth();
+	}, []);
+
 	function toggleSelect(id: string) {
 		setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 	}
@@ -145,18 +191,6 @@ export default function TasksPage() {
 			setSelectedIds(prev => Array.from(new Set([...prev, ...allVisibleIds])));
 		}
 	}
-
-	// Get current user
-	useEffect(() => {
-		async function getCurrentUser() {
-			const res = await fetch("/api/auth/me");
-			if (res.ok) {
-				const user = await res.json();
-				setCurrentUser(user);
-			}
-		}
-		getCurrentUser();
-	}, []);
 
 	async function createNewCustomer() {
 		if (!newCustomerName.trim()) return;
@@ -2274,9 +2308,9 @@ export default function TasksPage() {
 																		<span className={`text-sm ${subtask.status === "DONE" ? "line-through text-gray-500" : ""}`}>
 																			{subtask.title}
 																		</span>
-																		{subtask.assignee && (
+																		{subtask.assigneeId && (
 																			<span className="text-xs px-1 py-0.5 rounded bg-blue-100 text-blue-800">
-																				{subtask.assignee.name}
+																				Assigned
 																			</span>
 																		)}
 																		{subtask.dueAt && (
@@ -2294,7 +2328,7 @@ export default function TasksPage() {
 																			setEditSubtaskTitle(subtask.title);
 																			setEditSubtaskAssigneeId(subtask.assigneeId || "");
 																			setEditSubtaskDueAt(subtask.dueAt ? new Date(subtask.dueAt).toISOString().slice(0,16) : "");
-																			setEditSubtaskEstimatedHours(subtask.estimatedHours || null);
+																			setEditSubtaskEstimatedHours(null);
 																		}}
 																		className="text-xs px-2 py-1 rounded border hover:bg-gray-50"
 																	>

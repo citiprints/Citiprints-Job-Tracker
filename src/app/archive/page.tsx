@@ -5,55 +5,68 @@ type Task = {
 	id: string;
 	title: string;
 	description: string;
-	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED";
+	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "CANCELLED" | "ARCHIVED" | "CLIENT_TO_REVERT" | "OTHERS";
 	priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 	startAt?: string | null;
 	dueAt: string | null;
-	createdAt: string;
+	estimatedHours?: number | null;
+	actualHours?: number | null;
 	customerId?: string | null;
-	customerRef?: { id: string; name: string } | null;
+	customerRef?: { id: string; name: string; email: string } | null;
+	jobNumber?: string | null;
 	customFields?: any;
 	assignments?: { id: string; user: { id: string; name: string }; role: string }[];
 	subtasks?: Subtask[];
+	createdAt: string;
+	updatedAt: string;
 };
 
 type Subtask = {
 	id: string;
 	title: string;
-	status: "TODO" | "IN_PROGRESS" | "DONE";
+	status: "TODO" | "IN_PROGRESS" | "BLOCKED" | "DONE";
 	assigneeId?: string | null;
-	assignee?: { id: string; name: string; email: string } | null;
 	dueAt?: string | null;
-	estimatedHours?: number | null;
 	order: number;
-	createdAt: string;
-	updatedAt: string;
 };
 
 // Loading skeleton component
 function ArchiveSkeleton() {
 	return (
-		<div className="space-y-4">
-			{[1, 2, 3, 4, 5].map((i) => (
-				<div key={i} className="border border-gray-300 rounded p-3">
+		<div className="space-y-6">
+			{/* Header skeleton */}
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+				<div className="animate-pulse">
+					<div className="h-8 bg-gray-200 rounded w-48"></div>
+				</div>
+				<div className="flex flex-wrap items-center gap-2">
 					<div className="animate-pulse">
-						<div className="flex items-center justify-between mb-2">
-							<div className="flex items-center gap-2">
-								<div className="w-5 h-5 bg-gray-200 rounded-full"></div>
-								<div className="h-5 bg-gray-200 rounded w-48"></div>
-								<div className="h-4 bg-gray-200 rounded w-16"></div>
-								<div className="h-4 bg-gray-200 rounded w-20"></div>
-							</div>
-							<div className="h-6 bg-gray-200 rounded w-20"></div>
-						</div>
-						<div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
-						<div className="flex gap-2">
-							<div className="h-8 bg-gray-200 rounded w-16"></div>
-							<div className="h-8 bg-gray-200 rounded w-16"></div>
-						</div>
+						<div className="h-10 bg-gray-200 rounded w-32"></div>
 					</div>
 				</div>
-			))}
+			</div>
+
+			{/* Tasks skeleton */}
+			<div className="space-y-4">
+				{[1, 2, 3, 4, 5].map((i) => (
+					<div key={i} className="border border-gray-200 rounded-lg p-4">
+						<div className="animate-pulse">
+							<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+								<div className="flex flex-wrap items-center gap-2 min-w-0">
+									<div className="w-2 h-2 rounded-full bg-gray-200 flex-shrink-0"></div>
+									<div className="h-4 bg-gray-200 rounded w-64 sm:w-96 max-w-full"></div>
+									<div className="h-4 bg-gray-200 rounded w-16 flex-shrink-0"></div>
+									<div className="h-4 bg-gray-200 rounded w-20 flex-shrink-0"></div>
+								</div>
+								<div className="flex flex-col items-end gap-1 flex-shrink-0">
+									<div className="h-4 bg-gray-200 rounded w-20"></div>
+									<div className="h-4 bg-gray-200 rounded w-16"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				))}
+			</div>
 		</div>
 	);
 }
@@ -62,18 +75,30 @@ export default function ArchivePage() {
 	const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
 	const [tasks, setTasks] = useState<Task[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 	const [viewingId, setViewingId] = useState<string | null>(null);
 
-	// Get current user
+	// Check authentication
 	useEffect(() => {
-		async function getCurrentUser() {
-			const res = await fetch("/api/auth/me");
-			if (res.ok) {
-				const user = await res.json();
-				setCurrentUser(user);
+		const checkAuth = async () => {
+			try {
+				const res = await fetch("/api/auth/me");
+				if (res.ok) {
+					const userData = await res.json();
+					setCurrentUser(userData);
+				} else {
+					// Redirect to homepage if not authenticated
+					window.location.href = "/";
+					return;
+				}
+			} catch (error) {
+				console.error('Auth check error:', error);
+				window.location.href = "/";
+				return;
 			}
-		}
-		getCurrentUser();
+		};
+
+		checkAuth();
 	}, []);
 
 	useEffect(() => {

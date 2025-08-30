@@ -1,20 +1,45 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 type FileInfo = {
 	key: string;
 	size: number;
 	lastModified: Date;
 	url: string;
+	contentType: string;
 };
 
 export default function FilesPage() {
+	const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
 	const [files, setFiles] = useState<FileInfo[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [deletingKey, setDeletingKey] = useState<string | null>(null);
-	const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+	const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 	const [bulkDeleting, setBulkDeleting] = useState(false);
+
+	// Check authentication
+	useEffect(() => {
+		const checkAuth = async () => {
+			try {
+				const res = await fetch("/api/auth/me");
+				if (res.ok) {
+					const userData = await res.json();
+					setCurrentUser(userData);
+				} else {
+					// Redirect to homepage if not authenticated
+					window.location.href = "/";
+					return;
+				}
+			} catch (error) {
+				console.error('Auth check error:', error);
+				window.location.href = "/";
+				return;
+			}
+		};
+
+		checkAuth();
+	}, []);
 
 	useEffect(() => {
 		loadFiles();
