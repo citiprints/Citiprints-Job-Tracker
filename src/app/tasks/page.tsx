@@ -252,8 +252,16 @@ export default function TasksPage() {
 		const id = setInterval(() => {
 			setRefreshIn(prev => {
 				if (prev <= 1) {
-					load();
-					return AUTO_REFRESH_SECONDS;
+					// Only auto-refresh if no date pickers are open
+					// Check if any date picker elements are currently open
+					const datePickers = document.querySelectorAll('[data-date-picker-open="true"]');
+					if (datePickers.length === 0) {
+						load();
+						return AUTO_REFRESH_SECONDS;
+					} else {
+						// If date pickers are open, wait another 30 seconds
+						return 30;
+					}
 				}
 				return prev - 1;
 			});
@@ -523,6 +531,14 @@ export default function TasksPage() {
 		const datePart = isoLike ? isoLike.split("T")[0] : "";
 		const timePart = isoLike ? (isoLike.split("T")[1] || "") : "";
 
+		// Update data attribute when open state changes
+		useEffect(() => {
+			const container = document.querySelector(`[data-date-picker-label="${label}"]`);
+			if (container) {
+				container.setAttribute('data-date-picker-open', open.toString());
+			}
+		}, [open, label]);
+
 		function updateDate(nextDate: string) {
 			if (!nextDate && !timePart) return onChange("");
 			const next = `${nextDate || ""}${nextDate && timePart ? "T" : nextDate ? "T00:00" : ""}${timePart || ""}`.trim();
@@ -574,7 +590,7 @@ export default function TasksPage() {
 		const display = value ? new Date(value).toLocaleString() : `Select ${label}`;
 
 		return (
-			<div className="relative cursor-pointer" onClick={() => setOpen(v => !v)}>
+			<div className="relative cursor-pointer" onClick={() => setOpen(v => !v)} data-date-picker-label={label}>
 				<div className="w-full border rounded px-3 py-2 text-left">
 					<span className="block text-xs text-gray-600">{label}</span>
 					<span>{display}</span>
