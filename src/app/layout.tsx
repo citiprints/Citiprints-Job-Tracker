@@ -130,7 +130,7 @@ export default function RootLayout({
 									<Link href="/tasks" className="px-2 py-1 rounded border relative">
 										Tasks
 										{notificationCounts.tasks > 0 && (
-											<span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+											<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
 												{notificationCounts.tasks > 99 ? '99+' : notificationCounts.tasks}
 											</span>
 										)}
@@ -139,13 +139,14 @@ export default function RootLayout({
 									<Link href="/quotations" className="px-2 py-1 rounded border relative">
 										Quotations
 										{notificationCounts.quotations > 0 && (
-											<span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+											<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
 												{notificationCounts.quotations > 99 ? '99+' : notificationCounts.quotations}
 											</span>
 										)}
 									</Link>
 									<Link href="/customers" className="px-2 py-1 rounded border">Customers</Link>
 									<Link href="/custom-fields" className="px-2 py-1 rounded border">Custom fields</Link>
+									<Link href="/files" className="px-2 py-1 rounded border">Files</Link>
 									{user.role === "ADMIN" && (
 										<Link href="/users" className="px-2 py-1 rounded border">Users</Link>
 									)}

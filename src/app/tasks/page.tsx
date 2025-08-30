@@ -236,7 +236,7 @@ export default function TasksPage() {
 		if (resFields.ok) {
 			const json = await resFields.json();
 			setFields(json.fields ?? []);
-			}
+		}
 			if (resCustomers.ok) {
 				const json = await resCustomers.json();
 				setCustomers((json.customers ?? []).map((c: any) => ({ id: c.id, name: c.name })));
@@ -678,11 +678,22 @@ export default function TasksPage() {
 			
 			if (res.ok) {
 				const { task: newTask } = await res.json();
-				setTasks(prev => [...prev, {
+				const newTaskWithDefaults = {
 					...newTask,
 					subtasks: newTask.subtasks ?? [],
 					customFields: typeof newTask.customFields === "string" ? (() => { try { return JSON.parse(newTask.customFields); } catch { return {}; } })() : (newTask.customFields || {})
-				}]);
+				};
+				
+				// Insert the duplicated task right after the original task
+				setTasks(prev => {
+					const originalIndex = prev.findIndex(t => t.id === task.id);
+					if (originalIndex === -1) {
+						return [...prev, newTaskWithDefaults];
+					}
+					const newTasks = [...prev];
+					newTasks.splice(originalIndex + 1, 0, newTaskWithDefaults);
+					return newTasks;
+				});
 				setError(null);
 				notifyDataChange();
 			} else {
@@ -1225,7 +1236,7 @@ export default function TasksPage() {
 						))}
 					</div>
 					{error && <p className="text-sm text-red-600">{error}</p>}
-					<button type="submit" className="w-full bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 disabled:opacity-50" disabled={submitting}>
+					<button type="submit" className="w-full bg-black text-white py-2 px-3 rounded hover:bg-gray-800 disabled:opacity-50" disabled={submitting}>
 						{submitting ? "Creating..." : "Create task"}
 					</button>
 				</form>

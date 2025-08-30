@@ -1,133 +1,161 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { z } from "zod";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+
+const R2_ENDPOINT = process.env.R2_ENDPOINT!;
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID!;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY!;
+const R2_BUCKET = process.env.R2_BUCKET!;
+
+const s3Client = new S3Client({
+	region: "auto",
+	endpoint: R2_ENDPOINT,
+	credentials: {
+		accessKeyId: R2_ACCESS_KEY_ID,
+		secretAccessKey: R2_SECRET_ACCESS_KEY,
+	},
+});
 
 const UpdateTaskSchema = z.object({
 	title: z.string().min(1).optional(),
 	description: z.string().optional(),
-	status: z.enum(["TODO","IN_PROGRESS","BLOCKED","DONE","CANCELLED","ARCHIVED","CLIENT_TO_REVERT"]).optional(),
-	priority: z.enum(["LOW","MEDIUM","HIGH","URGENT"]).optional(),
-	startAt: z.string().nullable().optional(),
-	dueAt: z.string().nullable().optional(),
-	estimatedHours: z.number().nullable().optional(),
-	actualHours: z.number().nullable().optional(),
-	customer: z.string().nullable().optional(),
-	customerId: z.string().nullable().optional(),
-	assigneeId: z.string().nullable().optional(),
-	jobNumber: z.string().nullable().optional(),
-	customFields: z.any().nullable().optional(),
+	status: z.enum(["TODO", "IN_PROGRESS", "DONE", "ARCHIVED", "CLIENT_TO_REVERT", "OTHERS"]).optional(),
+	priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+	startAt: z.string().optional(),
+	dueAt: z.string().optional(),
+	customerId: z.string().optional(),
+	assigneeId: z.string().optional(),
+	customFields: z.record(z.any()).optional(),
 });
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
-	const user = await getCurrentUser();
-	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	const { id } = await params;
-	const task = await prisma.task.findUnique({ where: { id }, include: { subtasks: true, assignments: true } });
-	if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
-	return NextResponse.json({ task });
-}
-
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-	const user = await getCurrentUser();
-	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(
+	request: NextRequest,
+	{ params }: { params: Promise<{ id: string }> }
+) {
 	try {
-		const json = await request.json();
-		const data = UpdateTaskSchema.parse(json);
 		const { id } = await params;
-		
-		// Handle assignment updates
-		if ("assigneeId" in data) {
-			// Delete existing assignments
-			await prisma.assignment.deleteMany({
-				where: { taskId: id }
-			});
-			
-			// Create new assignment if assigneeId is provided
-			if (data.assigneeId) {
-				await prisma.assignment.create({
-					data: {
-						taskId: id,
-						userId: data.assigneeId,
-						role: "ASSIGNEE"
-					}
-				});
-			}
+		const user = await getCurrentUser();
+		if (!user) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
-		
-		const task = await prisma.task.update({
+
+		const task = await prisma.task.findUnique({
 			where: { id },
-			data: {
-				...("title" in data ? { title: data.title! } : {}),
-				...("description" in data ? { description: data.description ?? "" } : {}),
-				...("status" in data ? { status: data.status as any } : {}),
-				...("priority" in data ? { priority: data.priority as any } : {}),
-				...("startAt" in data ? { startAt: data.startAt ? new Date(data.startAt) : null } : {}),
-				...("dueAt" in data ? { dueAt: data.dueAt ? new Date(data.dueAt) : null } : {}),
-				...("estimatedHours" in data ? { estimatedHours: data.estimatedHours ?? null } : {}),
-				...("actualHours" in data ? { actualHours: data.actualHours ?? null } : {}),
-				...("customer" in data ? { customer: data.customer ?? null } : {}),
-				...("customerId" in data ? { customerId: data.customerId ?? null } : {}),
-				...("jobNumber" in data ? { jobNumber: data.jobNumber ?? null } : {}),
-				...("customFields" in data ? { customFields: data.customFields == null ? null : JSON.stringify(data.customFields) } : {}),
-			},
 			include: {
+				customer: true,
 				assignments: {
 					include: {
-						user: true
-					}
+						user: true,
+					},
 				},
-				customerRef: true
-			}
+				subtasks: true,
+			},
 		});
+
+		if (!task) {
+			return NextResponse.json({ error: "Task not found" }, { status: 404 });
+		}
+
 		return NextResponse.json({ task });
 	} catch (error) {
-		console.error("PATCH /api/tasks/[id] error:", error);
-		if (error instanceof z.ZodError) {
-			return NextResponse.json({ error: error.flatten() }, { status: 400 });
-		}
-		return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+		console.error("Error fetching task:", error);
+		return NextResponse.json({ error: "Failed to fetch task" }, { status: 500 });
 	}
 }
 
-export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
-	const user = await getCurrentUser();
-	if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	
+export async function PATCH(
+	request: NextRequest,
+	{ params }: { params: Promise<{ id: string }> }
+) {
 	try {
 		const { id } = await params;
-		
-		// Delete related records first (due to foreign key constraints)
-		await prisma.$transaction([
-			// Delete subtasks
-			prisma.subtask.deleteMany({
-				where: { taskId: id }
-			}),
-			// Delete assignments
-			prisma.assignment.deleteMany({
-				where: { taskId: id }
-			}),
-			// Delete comments
-			prisma.comment.deleteMany({
-				where: { taskId: id }
-			}),
-			// Delete attachments
-			prisma.attachment.deleteMany({
-				where: { taskId: id }
-			}),
-			// Delete activity logs
-			prisma.activityLog.deleteMany({
-				where: { taskId: id }
-			}),
-			// Finally delete the task
-			prisma.task.delete({
-				where: { id }
-			})
-		]);
-		
-		return NextResponse.json({ ok: true });
+		const user = await getCurrentUser();
+		if (!user) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
+		const body = await request.json();
+		const validatedData = UpdateTaskSchema.parse(body);
+
+		// Handle paymentStatus via customFields
+		if (validatedData.customFields?.paymentStatus) {
+			validatedData.customFields = {
+				...validatedData.customFields,
+				paymentStatus: validatedData.customFields.paymentStatus,
+			};
+		}
+
+		const task = await prisma.task.update({
+			where: { id },
+			data: validatedData,
+			include: {
+				customer: true,
+				assignments: {
+					include: {
+						user: true,
+					},
+				},
+				subtasks: true,
+			},
+		});
+
+		return NextResponse.json({ task });
 	} catch (error) {
-		console.error("DELETE /api/tasks/[id] error:", error);
-		return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+		console.error("Error updating task:", error);
+		return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
+	}
+}
+
+export async function DELETE(
+	request: NextRequest,
+	{ params }: { params: Promise<{ id: string }> }
+) {
+	try {
+		const { id } = await params;
+		const user = await getCurrentUser();
+		if (!user) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
+		// Get the task to find associated files
+		const task = await prisma.task.findUnique({
+			where: { id },
+			include: {
+				attachments: true,
+			},
+		});
+
+		if (!task) {
+			return NextResponse.json({ error: "Task not found" }, { status: 404 });
+		}
+
+		// Delete associated files from R2
+		if (task.attachments && task.attachments.length > 0) {
+			const deletePromises = task.attachments.map(async (attachment) => {
+				try {
+					const deleteCommand = new DeleteObjectCommand({
+						Bucket: R2_BUCKET,
+						Key: attachment.key,
+					});
+					await s3Client.send(deleteCommand);
+				} catch (error) {
+					console.error(`Failed to delete file ${attachment.key}:`, error);
+				}
+			});
+
+			await Promise.all(deletePromises);
+		}
+
+		// Delete the task (this will cascade delete attachments due to foreign key)
+		await prisma.task.delete({
+			where: { id },
+		});
+
+		return NextResponse.json({ success: true });
+	} catch (error) {
+		console.error("Error deleting task:", error);
+		return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });
 	}
 }

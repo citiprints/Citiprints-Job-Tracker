@@ -1,67 +1,94 @@
 import { NextRequest, NextResponse } from "next/server";
+import { S3Client, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getCurrentUser } from "@/lib/session";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 
 const R2_ENDPOINT = process.env.R2_ENDPOINT!;
-const R2_REGION = process.env.R2_REGION || "auto";
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID!;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY!;
 const R2_BUCKET = process.env.R2_BUCKET!;
 
-const s3 = new S3Client({
+const s3Client = new S3Client({
+	region: "auto",
 	endpoint: R2_ENDPOINT,
-	region: R2_REGION,
 	credentials: {
 		accessKeyId: R2_ACCESS_KEY_ID,
 		secretAccessKey: R2_SECRET_ACCESS_KEY,
 	},
-	forcePathStyle: true,
 });
 
 export async function GET(
 	request: NextRequest,
 	{ params }: { params: Promise<{ filename: string }> }
 ) {
-	const user = await getCurrentUser();
-	if (!user) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
-
 	try {
 		const { filename } = await params;
 		const decodedFilename = decodeURIComponent(filename);
 
-		const command = new GetObjectCommand({
+		// Check authentication
+		const user = await getCurrentUser();
+		if (!user) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
+		// Get the file from R2
+		const getCommand = new GetObjectCommand({
 			Bucket: R2_BUCKET,
 			Key: decodedFilename,
 		});
 
-		const response = await s3.send(command);
-		
-		if (!response.Body) {
+		const response = await s3Client.send(getCommand);
+		const stream = response.Body;
+
+		if (!stream) {
 			return NextResponse.json({ error: "File not found" }, { status: 404 });
 		}
 
-		// Convert the readable stream to a buffer
+		// Convert stream to buffer
 		const chunks: Uint8Array[] = [];
-		for await (const chunk of response.Body as any) {
+		for await (const chunk of stream as any) {
 			chunks.push(chunk);
 		}
 		const buffer = Buffer.concat(chunks);
 
-		// Determine content type
-		const contentType = response.ContentType || "application/octet-stream";
-		
-		// Create response with proper headers
+		// Return the file with appropriate headers
 		return new NextResponse(buffer, {
 			headers: {
-				"Content-Type": contentType,
-				"Content-Length": buffer.length.toString(),
-				"Cache-Control": "public, max-age=3600",
+				"Content-Type": response.ContentType || "application/octet-stream",
+				"Content-Length": response.ContentLength?.toString() || buffer.length.toString(),
+				"Cache-Control": "no-cache",
 			},
 		});
 	} catch (error) {
-		console.error("File download error:", error);
+		console.error("Error serving file:", error);
 		return NextResponse.json({ error: "File not found" }, { status: 404 });
+	}
+}
+
+export async function DELETE(
+	request: NextRequest,
+	{ params }: { params: Promise<{ filename: string }> }
+) {
+	try {
+		const { filename } = await params;
+		const decodedFilename = decodeURIComponent(filename);
+
+		// Check authentication
+		const user = await getCurrentUser();
+		if (!user) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
+		// Delete the file from R2
+		const deleteCommand = new DeleteObjectCommand({
+			Bucket: R2_BUCKET,
+			Key: decodedFilename,
+		});
+
+		await s3Client.send(deleteCommand);
+
+		return NextResponse.json({ success: true });
+	} catch (error) {
+		console.error("Error deleting file:", error);
+		return NextResponse.json({ error: "Failed to delete file" }, { status: 500 });
 	}
 }
