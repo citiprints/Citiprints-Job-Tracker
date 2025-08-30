@@ -147,8 +147,6 @@ export default function RootLayout({
 				<head>
 					<meta name="viewport" content="width=device-width, initial-scale=1" />
 					<meta name="description" content="Citiprints Job Tracker" />
-					<meta name="theme-color" content="#000000" />
-					<link rel="manifest" href="/manifest.json" />
 					<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
 					<link rel="shortcut icon" href="/favicon.png" />
 				</head>
@@ -181,8 +179,6 @@ export default function RootLayout({
 			<head>
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<meta name="description" content="Citiprints Job Tracker" />
-				<meta name="theme-color" content="#000000" />
-				<link rel="manifest" href="/manifest.json" />
 				<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
 				<link rel="shortcut icon" href="/favicon.png" />
 			</head>
