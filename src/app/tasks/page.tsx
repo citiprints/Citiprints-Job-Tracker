@@ -118,7 +118,7 @@ export default function TasksPage() {
 	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
 	const [groupBy, setGroupBy] = useState<"none"|"category"|"customer"|"status"|"assignee">("none");
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
-	const [openDatePickers, setOpenDatePickers] = useState<Set<string>>(new Set());
+	const [anyDatePickerOpen, setAnyDatePickerOpen] = useState(false);
 
 	function toggleSelect(id: string) {
 		setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -248,24 +248,25 @@ export default function TasksPage() {
 		load();
 	}, []);
 
-	// Auto refresh with countdown - completely disabled when any date picker is open
+	// Auto refresh with countdown - pause when any date picker is open
 	useEffect(() => {
-		if (openDatePickers.size > 0) {
-			// Don't run auto-refresh when any date picker is open
-			return;
-		}
-		
 		const id = setInterval(() => {
 			setRefreshIn(prev => {
 				if (prev <= 1) {
-					load();
-					return AUTO_REFRESH_SECONDS;
+					// Only refresh if no date picker is open
+					if (!anyDatePickerOpen) {
+						load();
+						return AUTO_REFRESH_SECONDS;
+					} else {
+						// Wait 30 more seconds if picker is open
+						return 30;
+					}
 				}
 				return prev - 1;
 			});
 		}, 1000);
 		return () => clearInterval(id);
-	}, [openDatePickers]);
+	}, [anyDatePickerOpen]);
 
 	// Helper function to check if task is assigned to current user
 	function isAssignedToMe(task: Task): boolean {
@@ -531,12 +532,8 @@ export default function TasksPage() {
 
 		// Update global state when this picker opens/closes
 		useEffect(() => {
-			setOpenDatePickers(prev => {
-				const newSet = new Set(prev);
-				open ? newSet.add(label) : newSet.delete(label);
-				return newSet;
-			});
-		}, [label, open]);
+			setAnyDatePickerOpen(open);
+		}, [open]);
 
 		function updateDate(nextDate: string) {
 			if (!nextDate && !timePart) return onChange("");
