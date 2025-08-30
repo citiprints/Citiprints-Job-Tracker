@@ -27,30 +27,15 @@ export default function AuthVerificationPage() {
 					const userData = await res.json();
 					console.log('✅ User found:', userData.name);
 					setUser(userData);
-					// Redirect to signin page after successful auth check
-					setTimeout(() => {
-						console.log('🔄 Redirecting to /signin...');
-						window.location.href = "/signin";
-					}, 100);
 				} else {
 					console.log('❌ No user found');
 					setUser(null);
 					setError("Not authenticated");
-					// Redirect to signin page if not authenticated
-					setTimeout(() => {
-						console.log('🔄 Redirecting to /signin (not authenticated)...');
-						window.location.href = "/signin";
-					}, 1000);
 				}
 			} catch (error) {
 				console.error('🚨 Auth check error:', error);
 				setUser(null);
 				setError("Authentication error");
-				// Redirect to signin page on error
-				setTimeout(() => {
-					console.log('🔄 Redirecting to /signin (error)...');
-					window.location.href = "/signin";
-				}, 1000);
 			} finally {
 				setLoading(false);
 			}
@@ -76,7 +61,7 @@ export default function AuthVerificationPage() {
 				<div className="text-center">
 					<h1 className="text-2xl font-semibold mb-4">Authentication Error</h1>
 					<p className="text-gray-600 mb-4">{error}</p>
-					<p className="text-sm text-gray-500">Redirecting to sign in...</p>
+					<p className="text-sm text-gray-500">Please sign in to continue.</p>
 				</div>
 			</div>
 		);
@@ -85,9 +70,12 @@ export default function AuthVerificationPage() {
 	return (
 		<div className="flex items-center justify-center min-h-screen">
 			<div className="text-center">
-				<h1 className="text-2xl font-semibold mb-4">Authentication Verified</h1>
-				<p className="text-gray-600 mb-4">Welcome, {user?.name}!</p>
-				<p className="text-sm text-gray-500">Redirecting to sign in...</p>
+				<h1 className="text-3xl font-bold mb-4">Welcome to Citiprints Job Tracker</h1>
+				<p className="text-xl text-gray-600 mb-6">Hello, {user?.name}!</p>
+				<p className="text-lg text-gray-500 mb-8">You are successfully authenticated.</p>
+				<div className="space-y-4">
+					<p className="text-sm text-gray-400">Use the navigation menu above to access your dashboard, tasks, and other features.</p>
+				</div>
 			</div>
 		</div>
 	);

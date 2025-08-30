@@ -155,7 +155,7 @@ export default function RootLayout({
 						<header className="border-b bg-background/95 backdrop-blur">
 							<div className="container mx-auto px-4 py-3">
 								<div className="flex items-center justify-between">
-									<Link href="/" className="text-xl font-bold">
+									<Link href="/authverification" className="text-xl font-bold">
 										Citiprints Job Tracker
 									</Link>
 									<div className="flex items-center gap-2 text-sm text-gray-500">
@@ -189,7 +189,7 @@ export default function RootLayout({
 						<div className="container mx-auto px-4 py-3">
 							<div className="flex items-center justify-between">
 								{/* Logo */}
-								<Link href="/" className="text-xl font-bold">
+								<Link href="/authverification" className="text-xl font-bold">
 									Citiprints Job Tracker
 								</Link>
 
