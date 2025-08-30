@@ -1,6 +1,6 @@
 // FORCE REBUILD - Loading animations added
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { getCurrentUser } from "@/lib/session";
 import { redirect } from "next/navigation";
 
@@ -115,10 +115,11 @@ export default function TasksPage() {
 	const [editSubtaskEstimatedHours, setEditSubtaskEstimatedHours] = useState<number | null>(null);
 
 	const AUTO_REFRESH_SECONDS = 120;
-	const [refreshIn, setRefreshIn] = useState<number>(AUTO_REFRESH_SECONDS);
 	const [groupBy, setGroupBy] = useState<"none"|"category"|"customer"|"status"|"assignee">("none");
 	const [selectedIds, setSelectedIds] = useState<string[]>([]);
 	const [anyDatePickerOpen, setAnyDatePickerOpen] = useState(false);
+	const countdownRef = useRef(AUTO_REFRESH_SECONDS);
+	const displayRef = useRef<HTMLSpanElement>(null);
 
 	function toggleSelect(id: string) {
 		setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -248,23 +249,25 @@ export default function TasksPage() {
 		load();
 	}, []);
 
-	// Auto refresh with countdown - SMART VERSION
+	// Auto refresh with countdown - NO RE-RENDER VERSION
 	useEffect(() => {
 		const id = setInterval(() => {
-			setRefreshIn(prev => {
-				if (prev <= 1) {
-					// Only refresh if the page is not in a loading state
-					if (!loading) {
-						load();
-						return AUTO_REFRESH_SECONDS;
-					} else {
-						// If still loading, wait another 30 seconds
-						return 30;
-					}
+			countdownRef.current--;
+			
+			// Update display directly without state change
+			if (displayRef.current) {
+				displayRef.current.textContent = `Auto refresh in ${countdownRef.current}s`;
+			}
+			
+			if (countdownRef.current <= 0) {
+				// Only refresh if the page is not in a loading state
+				if (!loading) {
+					load();
 				}
-				return prev - 1;
-			});
+				countdownRef.current = AUTO_REFRESH_SECONDS;
+			}
 		}, 1000);
+		
 		return () => clearInterval(id);
 	}, [loading]);
 
@@ -1172,8 +1175,8 @@ export default function TasksPage() {
 								</button>
 							</>
 						)}
-						<span className="text-xs text-gray-600">Auto refresh in {refreshIn}s</span>
-						<button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { setRefreshIn(AUTO_REFRESH_SECONDS); load(); }}>Refresh now</button>
+						<span className="text-xs text-gray-600" ref={displayRef}>Auto refresh in {AUTO_REFRESH_SECONDS}s</span>
+						<button type="button" className="rounded border px-3 py-2 text-sm" onClick={() => { countdownRef.current = AUTO_REFRESH_SECONDS; load(); }}>Refresh now</button>
 
 					</div>
 				</div>
