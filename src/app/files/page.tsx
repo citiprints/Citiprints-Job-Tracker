@@ -15,7 +15,7 @@ export default function FilesPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [deletingKey, setDeletingKey] = useState<string | null>(null);
-	const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+	const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
 	const [bulkDeleting, setBulkDeleting] = useState(false);
 
 	// Check authentication
