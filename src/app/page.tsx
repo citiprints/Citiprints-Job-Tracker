@@ -54,7 +54,7 @@ export default function Home() {
 				<p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
 					Redirecting to dashboard...
 				</p>
-				<Link href="/dashboard" className="btn rounded px-3 py-2">
+				<Link href="/dashboard" className="btn rounded px-3 py-2 bg-black text-white hover:bg-gray-800">
 					Go to Dashboard
 				</Link>
 			</div>
@@ -70,7 +70,7 @@ export default function Home() {
 			<div className="flex flex-col sm:flex-row gap-4 justify-center">
 				<Link 
 					href="/signup" 
-					className="btn rounded px-6 py-3 bg-blue-600 text-white hover:bg-blue-700"
+					className="btn rounded px-6 py-3 bg-black text-white hover:bg-gray-800"
 				>
 					Sign Up
 				</Link>

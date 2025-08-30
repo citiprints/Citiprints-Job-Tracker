@@ -14,12 +14,13 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 	const [user, setUser] = useState<any>(null);
-	const [theme, setTheme] = useState<"light" | "dark">("light");
 	const [loading, setLoading] = useState(true);
+	const [theme, setTheme] = useState<"light" | "dark">("light");
 	const [notificationCounts, setNotificationCounts] = useState<NotificationCounts>({ tasks: 0, quotations: 0 });
 	const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 	const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
+	const [authChecked, setAuthChecked] = useState(false);
 
 	useEffect(() => {
 		// Check theme from localStorage
@@ -79,6 +80,7 @@ export default function RootLayout({
 				setNotificationCounts({ tasks: 0, quotations: 0 });
 			} finally {
 				setLoading(false);
+				setAuthChecked(true);
 			}
 		}
 		checkAuth();
@@ -248,15 +250,15 @@ export default function RootLayout({
 			setUser(null);
 			setNotificationCounts({ tasks: 0, quotations: 0 });
 			
-			// Force a hard redirect to clear any cached state
-			window.location.replace('/');
+			// Force a hard redirect to sign-in page
+			window.location.replace('/signin');
 			
 		} catch (error) {
 			console.error('Logout error:', error);
 			// Still clear user state and redirect
 			setUser(null);
 			setNotificationCounts({ tasks: 0, quotations: 0 });
-			window.location.replace('/');
+			window.location.replace('/signin');
 		} finally {
 			setIsLoggingOut(false);
 		}
@@ -295,55 +297,68 @@ export default function RootLayout({
 								Citiprints Job Tracker
 							</Link>
 							
-							<nav className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto text-sm sm:text-base">
-								{user ? (
-									<>
-										<Link href="/dashboard" className="px-2 py-1 rounded border">Dashboard</Link>
-										<Link href="/tasks" className="px-2 py-1 rounded border relative">
-											Tasks
-											{notificationCounts.tasks > 0 && (
-												<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-													{notificationCounts.tasks > 99 ? '99+' : notificationCounts.tasks}
-												</span>
-											)}
-										</Link>
-										<Link href="/archive" className="px-2 py-1 rounded border">Archive</Link>
-										<Link href="/quotations" className="px-2 py-1 rounded border relative">
-											Quotations
-											{notificationCounts.quotations > 0 && (
-												<span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-													{notificationCounts.quotations > 99 ? '99+' : notificationCounts.quotations}
-												</span>
-											)}
-										</Link>
-										<Link href="/customers" className="px-2 py-1 rounded border">Customers</Link>
-										<Link href="/custom-fields" className="px-2 py-1 rounded border">Custom fields</Link>
-										<Link href="/files" className="px-2 py-1 rounded border">Files</Link>
-										{user.role === "ADMIN" && (
-											<Link href="/users" className="px-2 py-1 rounded border">Users</Link>
-										)}
-										<button
-											onClick={toggleTheme}
-											className="px-2 py-1 rounded border"
-										>
-											{theme === "light" ? "🌙" : "☀️"}
-										</button>
-										<button
-											onClick={handleLogout}
-											className="px-2 py-1 rounded border bg-red-50 text-red-700 hover:bg-red-100"
-										>
-											{isLoggingOut ? 'Logging out...' : 'Logout'}
-										</button>
-									</>
-								) : (
-									<>
-										<Link href="/signin" className="px-2 py-1 rounded border">Sign in</Link>
-										<Link href="/signup" className="px-2 py-1 rounded border bg-black text-white hover:bg-gray-800">
-											Sign up
-										</Link>
-									</>
-								)}
-							</nav>
+							{/* Navigation */}
+							{!loading && authChecked && (
+								<nav className="flex items-center gap-4 text-sm">
+									{user ? (
+										<>
+											<div className="flex items-center gap-2 text-gray-600">
+												<span>Signed in as:</span>
+												<span className="font-medium text-gray-800">{user.name}</span>
+											</div>
+											<Link href="/dashboard" className="px-2 py-1 rounded border">
+												Dashboard
+											</Link>
+											<Link href="/tasks" className="px-2 py-1 rounded border relative">
+												Tasks
+												{notificationCounts.tasks > 0 && (
+													<span className="absolute -top-1 -right-1 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+														{notificationCounts.tasks}
+													</span>
+												)}
+											</Link>
+											<Link href="/quotations" className="px-2 py-1 rounded border relative">
+												Quotations
+												{notificationCounts.quotations > 0 && (
+													<span className="absolute -top-1 -right-1 bg-gray-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+														{notificationCounts.quotations}
+													</span>
+												)}
+											</Link>
+											<Link href="/archive" className="px-2 py-1 rounded border">
+												Archive
+											</Link>
+											<Link href="/custom-fields" className="px-2 py-1 rounded border">
+												Custom Fields
+											</Link>
+											<Link href="/files" className="px-2 py-1 rounded border">
+												Files
+											</Link>
+											<button
+												onClick={toggleTheme}
+												className="px-2 py-1 rounded border"
+											>
+												{theme === "light" ? "🌙" : "☀️"}
+											</button>
+											<button
+												onClick={handleLogout}
+												className="px-2 py-1 rounded border bg-red-50 text-red-700 hover:bg-red-100"
+											>
+												{isLoggingOut ? 'Logging out...' : 'Logout'}
+											</button>
+										</>
+									) : (
+										<>
+											<Link href="/signin" className="px-2 py-1 rounded border">
+												Sign In
+											</Link>
+											<Link href="/signup" className="px-2 py-1 rounded border bg-black text-white hover:bg-gray-800">
+												Sign Up
+											</Link>
+										</>
+									)}
+								</nav>
+							)}
 						</div>
 					</div>
 				</header>
