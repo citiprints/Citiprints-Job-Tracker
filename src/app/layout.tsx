@@ -43,12 +43,12 @@ export default function RootLayout({
 			
 			if (tasksRes.ok) {
 				const tasksData = await tasksRes.json();
-				setNotificationCounts(prev => ({ ...prev, tasks: tasksData.totalCount || 0 }));
+				setNotificationCounts(prev => ({ ...prev, tasks: tasksData.pagination?.total || 0 }));
 			}
 			
 			if (quotationsRes.ok) {
 				const quotationsData = await quotationsRes.json();
-				setNotificationCounts(prev => ({ ...prev, quotations: quotationsData.length || 0 }));
+				setNotificationCounts(prev => ({ ...prev, quotations: quotationsData.quotations?.length || 0 }));
 			}
 		} catch (error) {
 			console.error('Failed to load notification counts:', error);
