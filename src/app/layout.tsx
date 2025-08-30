@@ -41,6 +41,23 @@ export default function RootLayout({
 			});
 		}
 
+		// Check if app is already installed
+		const checkIfInstalled = () => {
+			if (window.matchMedia('(display-mode: standalone)').matches) {
+				console.log('App is already installed');
+				return;
+			}
+			
+			// Show install prompt for mobile users who haven't dismissed it
+			if (window.innerWidth <= 768 && !localStorage.getItem('installPromptDismissed')) {
+				setTimeout(() => {
+					setShowInstallPrompt(true);
+				}, 2000);
+			}
+		};
+
+		checkIfInstalled();
+
 		// Check if user is logged in
 		async function checkAuth() {
 			try {
@@ -79,10 +96,8 @@ export default function RootLayout({
 			e.preventDefault();
 			// Stash the event so it can be triggered later
 			setDeferredPrompt(e);
-			// Show the install prompt after a delay
-			setTimeout(() => {
-				setShowInstallPrompt(true);
-			}, 3000);
+			// Show the install prompt immediately
+			setShowInstallPrompt(true);
 		};
 
 		// Handle successful installation
@@ -97,6 +112,7 @@ export default function RootLayout({
 		window.addEventListener('dataChanged', handleDataChange);
 		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 		window.addEventListener('appinstalled', handleAppInstalled);
+		window.addEventListener('resize', checkIfInstalled);
 
 		return () => {
 			window.removeEventListener('storage', handleStorageChange);
@@ -104,6 +120,7 @@ export default function RootLayout({
 			window.removeEventListener('dataChanged', handleDataChange);
 			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 			window.removeEventListener('appinstalled', handleAppInstalled);
+			window.removeEventListener('resize', checkIfInstalled);
 		};
 	}, [user]);
 
@@ -172,7 +189,7 @@ export default function RootLayout({
 			<head>
 				<meta name="viewport" content="width=device-width, initial-scale=1" />
 				<meta name="description" content="Task management and job tracking for Citiprints" />
-				<meta name="theme-color" content="#2563eb" />
+				<meta name="theme-color" content="#000000" />
 				<meta name="apple-mobile-web-app-capable" content="yes" />
 				<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 				<meta name="apple-mobile-web-app-title" content="Citiprints" />
@@ -239,7 +256,7 @@ export default function RootLayout({
 								) : (
 									<>
 										<Link href="/signin" className="px-2 py-1 rounded border">Sign in</Link>
-										<Link href="/signup" className="px-2 py-1 rounded border bg-blue-600 text-white hover:bg-blue-700">
+										<Link href="/signup" className="px-2 py-1 rounded border bg-black text-white hover:bg-gray-800">
 											Sign up
 										</Link>
 									</>
@@ -258,7 +275,7 @@ export default function RootLayout({
 					<div className="fixed bottom-4 left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50">
 						<div className="flex items-center justify-between">
 							<div className="flex items-center space-x-3">
-								<div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+								<div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center">
 									<span className="text-white text-xl">📱</span>
 								</div>
 								<div>
@@ -269,7 +286,7 @@ export default function RootLayout({
 							<div className="flex space-x-2">
 								<button
 									onClick={handleInstallClick}
-									className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+									className="px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800"
 								>
 									Install
 								</button>
