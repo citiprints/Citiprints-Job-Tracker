@@ -644,15 +644,16 @@ export default function TasksPage() {
 		try {
 			// Create a copy of the task with "(Copy)" appended to title
 			const duplicatedTask = {
-				...task,
 				title: `${task.title} (Copy)`,
+				description: task.description || "",
 				status: "TODO", // Reset status to TODO
-				createdAt: new Date().toISOString(),
-				updatedAt: new Date().toISOString()
+				priority: task.priority || "MEDIUM",
+				startAt: task.startAt || undefined,
+				dueAt: task.dueAt || undefined,
+				customerId: task.customerId || undefined,
+				customFields: task.customFields || {},
+				assigneeId: task.assignments?.[0]?.user.id || undefined
 			};
-			
-			// Remove the id so a new one is generated
-			delete (duplicatedTask as any).id;
 			
 			const res = await fetch("/api/tasks", {
 				method: "POST",
