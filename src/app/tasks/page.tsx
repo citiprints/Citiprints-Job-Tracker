@@ -574,18 +574,10 @@ export default function TasksPage() {
 		const minuteOptions = ["00","15","30","45"];
 
 		const display = value ? new Date(value).toLocaleString() : `Select ${label}`;
-		const uniqueId = `datetime-${label.toLowerCase().replace(/\s+/g, '-')}`;
 
 		return (
 			<div className="relative">
 				<div className="block text-xs text-gray-600 mb-1">{label}</div>
-				<input
-					type="hidden"
-					id={uniqueId}
-					name={uniqueId}
-					value={value}
-					readOnly
-				/>
 				<div 
 					className="w-full border rounded px-3 py-2 text-left cursor-pointer" 
 					onClick={(e) => {
@@ -595,7 +587,7 @@ export default function TasksPage() {
 					}}
 					role="button"
 					tabIndex={0}
-					aria-labelledby={`${uniqueId}-label`}
+					aria-label={`Select ${label} date and time`}
 					onKeyDown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') {
 							e.preventDefault();
@@ -603,7 +595,7 @@ export default function TasksPage() {
 						}
 					}}
 				>
-					<span id={`${uniqueId}-label`}>{display}</span>
+					<span>{display}</span>
 				</div>
 				{open && (
 					<div 
