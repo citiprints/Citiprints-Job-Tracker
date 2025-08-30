@@ -31,29 +31,35 @@ export default function RootLayout({
 
 	// Simple auth check function
 	const checkAuth = async () => {
+		console.log('🔍 Checking auth...');
 		try {
 			const res = await fetch("/api/auth/me");
+			console.log('📡 Auth response status:', res.status);
 			if (res.ok) {
 				const userData = await res.json();
+				console.log('✅ User found:', userData.name);
 				setUser(userData);
-				// Load notification counts
-				loadNotificationCounts();
+				// Load notification counts after setting user
+				loadNotificationCounts(userData);
 			} else {
+				console.log('❌ No user found');
 				setUser(null);
 				setNotificationCounts({ tasks: 0, quotations: 0 });
 			}
 		} catch (error) {
-			console.error('Auth check error:', error);
+			console.error('🚨 Auth check error:', error);
 			setUser(null);
 			setNotificationCounts({ tasks: 0, quotations: 0 });
 		} finally {
+			console.log('🏁 Auth check complete, setting loading to false');
 			setLoading(false);
 		}
 	};
 
 	// Load notification counts
-	const loadNotificationCounts = async () => {
-		if (!user) return;
+	const loadNotificationCounts = async (currentUser?: User) => {
+		const userToCheck = currentUser || user;
+		if (!userToCheck) return;
 		
 		try {
 			const [tasksRes, quotationsRes] = await Promise.all([
@@ -221,7 +227,12 @@ export default function RootLayout({
 								</Link>
 
 								{/* Navigation */}
-								{!loading && (
+								{loading ? (
+									<div className="flex items-center gap-2 text-sm text-gray-500">
+										<div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+										<span>Loading...</span>
+									</div>
+								) : (
 									<nav className="flex items-center gap-4 text-sm">
 										{user ? (
 											<>
