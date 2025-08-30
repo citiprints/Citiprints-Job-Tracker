@@ -79,6 +79,7 @@ export default function TasksPage() {
 	const [due, setDue] = useState<string>("");
 	const [custom, setCustom] = useState<Record<string, any>>({});
 	const [editingId, setEditingId] = useState<string | null>(null);
+	const [editingTask, setEditingTask] = useState<Task | null>(null);
 	const [viewingId, setViewingId] = useState<string | null>(null);
 	const [editTitle, setEditTitle] = useState("");
 	const [editDesc, setEditDesc] = useState("");
